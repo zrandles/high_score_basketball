@@ -49,10 +49,14 @@ namespace :nba do
         next
       end
 
-      # Update player team and injury status
+      # Get age if provided
+      age = row['Age']&.to_i
+
+      # Update player team, injury status, and age
       player.update(
         team: team,
-        injury_status: injury_status
+        injury_status: injury_status,
+        age: age
       )
 
       # Get or create player summary
