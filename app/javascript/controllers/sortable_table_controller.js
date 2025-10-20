@@ -42,10 +42,13 @@ export default class extends Controller {
       'player': 1,
       'team': 2,
       'avg_high': 3,
-      'weeks': 4,
-      'variance': 5,
-      'peak': 6,
-      'floor': 7
+      'avg_score': 4,
+      'differential': 5,
+      'age': 6,
+      'weeks': 7,
+      'variance': 8,
+      'peak': 9,
+      'floor': 10
     }
 
     const targetCell = cells[columnIndex[column]]

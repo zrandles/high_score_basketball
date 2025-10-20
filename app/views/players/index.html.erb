@@ -21,6 +21,15 @@
           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="avg_high">
             Avg High
           </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="avg_score">
+            Avg Score
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="differential">
+            Differential
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="age">
+            Age
+          </th>
           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="weeks">
             Weeks
           </th>
@@ -50,6 +59,22 @@
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold" data-value="<%= summary.avg_weekly_high.round(1) %>">
               <%= summary.avg_weekly_high.round(1) %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600" data-value="<%= summary.avg_score&.round(1) || 0 %>">
+              <%= summary.avg_score&.round(1) || '-' %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold" data-value="<%= summary.differential&.round(1) || 0 %>">
+              <% if summary.differential %>
+                <% diff_color = summary.differential >= 10 ? 'text-green-600' : summary.differential >= 5 ? 'text-blue-600' : 'text-gray-600' %>
+                <span class="<%= diff_color %>">
+                  +<%= summary.differential.round(1) %>
+                </span>
+              <% else %>
+                -
+              <% end %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-value="<%= player.age || 0 %>">
+              <%= player.age || '-' %>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-value="<%= summary.non_zero_weeks %>">
               <%= summary.non_zero_weeks %>
