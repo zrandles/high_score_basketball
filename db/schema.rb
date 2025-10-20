@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_20_172922) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_20_223025) do
   create_table "game_logs", force: :cascade do |t|
     t.integer "player_id", null: false
     t.date "game_date"
@@ -43,6 +43,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_20_172922) do
     t.integer "total_fantasy_points"
     t.integer "games_played"
     t.integer "total_basketball_points"
+    t.integer "projected_games"
+    t.integer "projected_minutes"
+    t.decimal "projected_fp"
+    t.decimal "projected_fp_per_game"
+    t.decimal "projected_fp_per_minute"
     t.index ["player_id"], name: "index_player_summaries_on_player_id"
   end
 
@@ -55,6 +60,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_20_172922) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "age"
+    t.string "injury_status"
   end
 
   create_table "weekly_highs", force: :cascade do |t|
