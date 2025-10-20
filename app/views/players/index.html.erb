@@ -5,50 +5,87 @@
     <p class="text-sm text-gray-500 mt-2">Scoring: Points + Rebounds + (2 × Assists) + (3 × Blocks) + (3 × Steals)</p>
   </div>
 
-  <div class="bg-white rounded-lg shadow overflow-hidden">
+  <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-6">
+    <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+      <div class="flex-1">
+        <h3 class="text-sm font-semibold text-blue-900 mb-2">How to Use This Table:</h3>
+        <ul class="text-sm text-blue-800 space-y-1">
+          <li><strong>Draft Targets:</strong> Look for HIGH Variance (green badge) + High Upside (10+)</li>
+          <li><strong>Variance:</strong> Boom/bust potential. Green = explosive games (ideal for weekly format)</li>
+          <li><strong>Upside:</strong> Gap between weekly high and average score. Higher = more draft value</li>
+          <li><strong>Click column headers</strong> to sort. Click player names for weekly breakdown.</li>
+        </ul>
+      </div>
+      <div class="md:w-72">
+        <div class="bg-white rounded-lg p-3 border-2 border-blue-200">
+          <h4 class="text-xs font-bold text-blue-900 mb-2 uppercase">Quick Sort</h4>
+          <div class="space-y-2">
+            <button onclick="document.querySelector('[data-column=variance]').click()" class="w-full px-3 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded transition">
+              Sort by Variance
+            </button>
+            <button onclick="document.querySelector('[data-column=differential]').click()" class="w-full px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded transition">
+              Sort by Upside
+            </button>
+            <button onclick="document.querySelector('[data-column=peak]').click()" class="w-full px-3 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded transition">
+              Sort by Peak
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile scroll hint -->
+  <div class="md:hidden mb-2 text-center text-xs text-gray-500 italic">
+    Swipe left/right to see all columns →
+  </div>
+
+  <div class="bg-white rounded-lg shadow overflow-x-auto">
     <table class="min-w-full divide-y divide-gray-200" data-controller="sortable-table">
       <thead class="bg-gray-50">
+        <!-- Column group labels -->
+        <tr class="border-b border-gray-300">
+          <th colspan="3" class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase text-left bg-gray-100">Player Info</th>
+          <th colspan="4" class="px-6 py-2 text-xs font-semibold text-blue-700 uppercase text-center bg-blue-50 border-l-2 border-blue-200">Draft Value Metrics</th>
+          <th colspan="4" class="px-6 py-2 text-xs font-semibold text-gray-700 uppercase text-center bg-gray-50 border-l-2 border-gray-200">Context Stats</th>
+        </tr>
         <tr>
-          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="rank">
-            Rank
+          <!-- Player Info -->
+          <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="rank">
+            #
           </th>
           <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="player">
             Player
           </th>
-          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="team">
+          <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="team">
             Team
           </th>
-          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="avg_high">
+
+          <!-- Draft Value Metrics (most important) -->
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider cursor-pointer hover:bg-blue-50 border-l-2 border-blue-200" data-action="click->sortable-table#sort" data-column="variance" title="Boom/bust potential - higher is better for weekly format">
+            Variance ⓘ
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider cursor-pointer hover:bg-blue-50" data-action="click->sortable-table#sort" data-column="differential" title="Gap between weekly high and average score">
+            Upside ⓘ
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider cursor-pointer hover:bg-blue-50" data-action="click->sortable-table#sort" data-column="avg_high" title="Average of best weekly scores">
             Avg High
           </th>
-          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="avg_score">
-            Avg Score
-          </th>
-          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="differential">
-            Differential
-          </th>
-          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="age">
-            Age
-          </th>
-          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="total_fantasy_points">
-            Total Fantasy Pts
-          </th>
-          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="total_basketball_points">
-            Total BBall Pts
-          </th>
-          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="games_played">
-            Games
-          </th>
-          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="weeks">
-            Weeks
-          </th>
-          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="variance">
-            Variance
-          </th>
-          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="peak">
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider cursor-pointer hover:bg-blue-50" data-action="click->sortable-table#sort" data-column="peak" title="Best single week performance">
             Peak
           </th>
-          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="floor">
+
+          <!-- Context Stats (secondary) -->
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 border-l-2 border-gray-200" data-action="click->sortable-table#sort" data-column="avg_score" title="Season average per game">
+            Avg/Game
+          </th>
+          <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50" data-action="click->sortable-table#sort" data-column="weeks" title="Weeks with games played">
+            Weeks
+          </th>
+          <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50" data-action="click->sortable-table#sort" data-column="games_played">
+            GP
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50" data-action="click->sortable-table#sort" data-column="floor" title="Worst weekly score">
             Floor
           </th>
         </tr>
@@ -56,57 +93,54 @@
       <tbody class="bg-white divide-y divide-gray-200" data-sortable-table-target="tbody">
         <% @players.each_with_index do |player, index| %>
           <% summary = player.player_summary %>
-          <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='<%= player_path(player) %>'">
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" data-value="<%= index + 1 %>">
+          <tr class="hover:bg-blue-50 cursor-pointer transition-colors" onclick="window.location='<%= player_path(player) %>'">
+            <!-- Player Info -->
+            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500" data-value="<%= index + 1 %>">
               <%= index + 1 %>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" data-value="<%= player.name %>" onclick="event.stopPropagation()">
-              <%= link_to player.name, player_path(player), class: "text-blue-600 hover:text-blue-800 hover:underline" %>
+              <%= link_to player.name, player_path(player), class: "text-blue-600 hover:text-blue-800 hover:underline font-semibold" %>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-value="<%= player.team %>">
+            <td class="px-4 py-4 whitespace-nowrap text-xs text-gray-500 uppercase" data-value="<%= player.team %>">
               <%= player.team %>
+            </td>
+
+            <!-- Draft Value Metrics -->
+            <td class="px-6 py-4 whitespace-nowrap text-sm border-l-2 border-blue-100" data-value="<%= summary.variance.round(1) %>">
+              <% variance_level = variance_class(summary.variance) %>
+              <span class="px-3 py-1 inline-flex text-sm leading-5 font-bold rounded-full <%= variance_level[:class] %>">
+                <%= summary.variance.round(1) %>
+              </span>
+              <span class="ml-1 text-xs text-gray-500"><%= variance_level[:label] %></span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold" data-value="<%= summary.differential&.round(1) || 0 %>">
+              <% if summary.differential %>
+                <% diff_color = summary.differential >= 10 ? 'text-green-600' : summary.differential >= 5 ? 'text-blue-600' : 'text-gray-600' %>
+                <span class="<%= diff_color %> text-lg">
+                  +<%= summary.differential.round(1) %>
+                </span>
+              <% else %>
+                <span class="text-gray-400">-</span>
+              <% end %>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold" data-value="<%= summary.avg_weekly_high.round(1) %>">
               <%= summary.avg_weekly_high.round(1) %>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600" data-value="<%= summary.avg_score&.round(1) || 0 %>">
-              <%= summary.avg_score&.round(1) || '-' %>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold" data-value="<%= summary.differential&.round(1) || 0 %>">
-              <% if summary.differential %>
-                <% diff_color = summary.differential >= 10 ? 'text-green-600' : summary.differential >= 5 ? 'text-blue-600' : 'text-gray-600' %>
-                <span class="<%= diff_color %>">
-                  +<%= summary.differential.round(1) %>
-                </span>
-              <% else %>
-                -
-              <% end %>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-value="<%= player.age || 0 %>">
-              <%= player.age || '-' %>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold" data-value="<%= summary.total_fantasy_points || 0 %>">
-              <%= summary.total_fantasy_points&.to_s&.reverse&.gsub(/(\d{3})(?=\d)/, '\\1,')&.reverse || '-' %>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600" data-value="<%= summary.total_basketball_points || 0 %>">
-              <%= summary.total_basketball_points&.to_s&.reverse&.gsub(/(\d{3})(?=\d)/, '\\1,')&.reverse || '-' %>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600" data-value="<%= summary.games_played || 0 %>">
-              <%= summary.games_played || '-' %>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-value="<%= summary.non_zero_weeks %>">
-              <%= summary.non_zero_weeks %>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm" data-value="<%= summary.variance.round(1) %>">
-              <% variance_level = variance_class(summary.variance) %>
-              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= variance_level[:class] %>">
-                <%= summary.variance.round(1) %> <%= variance_level[:label] %>
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold" data-value="<%= summary.peak_score %>">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold text-lg" data-value="<%= summary.peak_score %>">
               <%= summary.peak_score %>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600" data-value="<%= summary.floor_score %>">
+
+            <!-- Context Stats -->
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border-l-2 border-gray-100" data-value="<%= summary.avg_score&.round(1) || 0 %>">
+              <%= summary.avg_score&.round(1) || '-' %>
+            </td>
+            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500" data-value="<%= summary.non_zero_weeks %>">
+              <%= summary.non_zero_weeks %>
+            </td>
+            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500" data-value="<%= summary.games_played || 0 %>">
+              <%= summary.games_played || '-' %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-semibold" data-value="<%= summary.floor_score %>">
               <%= summary.floor_score %>
             </td>
           </tr>
@@ -115,12 +149,21 @@
     </table>
   </div>
 
-  <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-    <h3 class="text-sm font-semibold text-blue-900 mb-2">Draft Strategy Tips:</h3>
-    <ul class="text-sm text-blue-800 space-y-1">
-      <li><strong>High Variance = Good:</strong> In weekly high scoring, you want explosive games, not consistency</li>
-      <li><strong>Peak > Average:</strong> A player who can drop 80+ occasionally is more valuable than steady 50s</li>
-      <li><strong>Check Weeks:</strong> Make sure players have enough games (injuries matter)</li>
-    </ul>
+  <div class="mt-6 bg-green-50 border-l-4 border-green-500 rounded-lg p-4">
+    <h3 class="text-sm font-semibold text-green-900 mb-2">Quick Reference:</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-green-800">
+      <div>
+        <strong class="text-green-900">Top Targets:</strong>
+        <p>Variance 150+ (green) + Upside 10+</p>
+      </div>
+      <div>
+        <strong class="text-green-900">Solid Picks:</strong>
+        <p>Variance 80-150 (yellow) + Upside 5+</p>
+      </div>
+      <div>
+        <strong class="text-green-900">Availability Check:</strong>
+        <p>Look for 20+ weeks played</p>
+      </div>
+    </div>
   </div>
 </div>

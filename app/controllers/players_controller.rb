@@ -11,4 +11,9 @@ class PlayersController < ApplicationController
     @weekly_highs = @player.weekly_highs.where(season: '2023-24').order(:week_number)
     @summary = @player.player_summary
   end
+
+  def raw_data
+    @player = Player.includes(:game_logs).find(params[:id])
+    @game_logs = @player.game_logs.where(season: '2023-24').order(:game_date)
+  end
 end

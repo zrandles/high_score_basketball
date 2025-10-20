@@ -10,6 +10,10 @@ Rails.application.routes.draw do
 
     # Main app routes
     root "players#index"
-    resources :players, only: [:index, :show]
+    resources :players, only: [:index, :show] do
+      member do
+        get 'raw_data'
+      end
+    end
   end
 end
