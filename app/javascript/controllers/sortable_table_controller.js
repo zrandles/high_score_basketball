@@ -37,21 +37,19 @@ export default class extends Controller {
     const cells = row.querySelectorAll('td[data-value]')
 
     // Find the right cell based on column
+    // Must match the exact order in the HTML table
     const columnIndex = {
       'rank': 0,
       'player': 1,
       'team': 2,
-      'avg_high': 3,
-      'avg_score': 4,
-      'differential': 5,
-      'age': 6,
-      'total_fantasy_points': 7,
-      'total_basketball_points': 8,
+      'variance': 3,
+      'differential': 4,
+      'avg_high': 5,
+      'peak': 6,
+      'avg_score': 7,
+      'weeks': 8,
       'games_played': 9,
-      'weeks': 10,
-      'variance': 11,
-      'peak': 12,
-      'floor': 13
+      'floor': 10
     }
 
     const targetCell = cells[columnIndex[column]]
