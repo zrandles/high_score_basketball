@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  player: one
+  season: MyString
+  avg_weekly_high: 9.99
+  non_zero_weeks: 1
+  variance: 9.99
+  peak_score: 1
+  floor_score: 1
+
+two:
+  player: two
+  season: MyString
+  avg_weekly_high: 9.99
+  non_zero_weeks: 1
+  variance: 9.99
+  peak_score: 1
+  floor_score: 1

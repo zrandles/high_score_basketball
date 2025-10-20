@@ -1,0 +1,27 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  player: one
+  game_date: 2025-10-20
+  week_number: 1
+  points: 1
+  rebounds: 1
+  assists: 1
+  blocks: 1
+  steals: 1
+  fantasy_score: 1
+  opponent: MyString
+  season: MyString
+
+two:
+  player: two
+  game_date: 2025-10-20
+  week_number: 1
+  points: 1
+  rebounds: 1
+  assists: 1
+  blocks: 1
+  steals: 1
+  fantasy_score: 1
+  opponent: MyString
+  season: MyString

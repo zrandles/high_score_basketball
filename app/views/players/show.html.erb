@@ -1,0 +1,107 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="mb-6">
+    <%= link_to "← Back to All Players", players_path, class: "text-blue-600 hover:text-blue-800 hover:underline" %>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="flex justify-between items-start">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2"><%= @player.name %></h1>
+        <p class="text-gray-600"><%= @player.team %> - 2023-24 Season</p>
+      </div>
+      <div class="text-right">
+        <p class="text-sm text-gray-500">Season PPG</p>
+        <p class="text-2xl font-bold text-gray-900"><%= @player.ppg_2023_24&.round(1) || 'N/A' %></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <p class="text-sm text-blue-600 mb-1">Avg Weekly High</p>
+      <p class="text-3xl font-bold text-blue-900"><%= @summary.avg_weekly_high.round(1) %></p>
+    </div>
+
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+      <p class="text-sm text-green-600 mb-1">Peak Score</p>
+      <p class="text-3xl font-bold text-green-900"><%= @summary.peak_score %></p>
+    </div>
+
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+      <p class="text-sm text-red-600 mb-1">Floor Score</p>
+      <p class="text-3xl font-bold text-red-900"><%= @summary.floor_score %></p>
+    </div>
+
+    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+      <p class="text-sm text-purple-600 mb-1">Variance</p>
+      <p class="text-3xl font-bold text-purple-900"><%= @summary.variance.round(1) %></p>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+      <h2 class="text-xl font-semibold text-gray-900">Weekly High Scores (<%= @summary.non_zero_weeks %> weeks)</h2>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Week
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Fantasy Score
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Games Played
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              vs Average
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% @weekly_highs.each do |week_high| %>
+            <% diff = week_high.fantasy_score - @summary.avg_weekly_high %>
+            <% diff_class = diff >= 0 ? 'text-green-600' : 'text-red-600' %>
+            <% diff_sign = diff >= 0 ? '+' : '' %>
+            <tr class="<%= week_high.fantasy_score == @summary.peak_score ? 'bg-green-50' : '' %>">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                Week <%= week_high.week_number %>
+                <% if week_high.fantasy_score == @summary.peak_score %>
+                  <span class="ml-2 px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Peak</span>
+                <% elsif week_high.fantasy_score == @summary.floor_score %>
+                  <span class="ml-2 px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Floor</span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                <%= week_high.fantasy_score %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <%= week_high.games_that_week %>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm <%= diff_class %> font-semibold">
+                <%= diff_sign %><%= diff.round(1) %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+    <h3 class="text-sm font-semibold text-gray-700 mb-2">About This Player:</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+      <div>
+        <p><strong>Consistency:</strong> <%= @summary.variance < 80 ? 'High (reliable week-to-week)' : @summary.variance < 150 ? 'Medium (some volatility)' : 'Low (boom or bust)' %></p>
+        <p><strong>Games Played:</strong> <%= @summary.non_zero_weeks %> weeks with games</p>
+      </div>
+      <div>
+        <p><strong>Scoring Range:</strong> <%= @summary.floor_score %> - <%= @summary.peak_score %> (spread: <%= @summary.peak_score - @summary.floor_score %>)</p>
+        <p><strong>Draft Value:</strong> <%= @summary.variance >= 150 ? 'High (explosive potential)' : @summary.variance >= 80 ? 'Medium (solid pick)' : 'Lower (too consistent)' %></p>
+      </div>
+    </div>
+  </div>
+</div>

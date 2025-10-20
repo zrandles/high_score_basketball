@@ -1,0 +1,83 @@
+<div class="container mx-auto px-4 py-8" data-controller="sortable-table">
+  <div class="mb-8">
+    <h1 class="text-4xl font-bold text-gray-900 mb-2">Weekly High Score Basketball</h1>
+    <p class="text-gray-600">2023-24 NBA Season - Fantasy Draft Analysis</p>
+    <p class="text-sm text-gray-500 mt-2">Scoring: Points + Rebounds + (2 × Assists) + (3 × Blocks) + (3 × Steals)</p>
+  </div>
+
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="rank">
+            Rank
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="player">
+            Player
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="team">
+            Team
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="avg_high">
+            Avg High
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="weeks">
+            Weeks
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="variance">
+            Variance
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="peak">
+            Peak
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" data-action="click->sortable-table#sort" data-column="floor">
+            Floor
+          </th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200" data-sortable-table-target="tbody">
+        <% @players.each_with_index do |player, index| %>
+          <% summary = player.player_summary %>
+          <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='<%= player_path(player) %>'">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" data-value="<%= index + 1 %>">
+              <%= index + 1 %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 hover:text-blue-800" data-value="<%= player.name %>">
+              <%= link_to player.name, player_path(player), class: "hover:underline" %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-value="<%= player.team %>">
+              <%= player.team %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold" data-value="<%= summary.avg_weekly_high.round(1) %>">
+              <%= summary.avg_weekly_high.round(1) %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-value="<%= summary.non_zero_weeks %>">
+              <%= summary.non_zero_weeks %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm" data-value="<%= summary.variance.round(1) %>">
+              <% variance_level = variance_class(summary.variance) %>
+              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= variance_level[:class] %>">
+                <%= summary.variance.round(1) %> <%= variance_level[:label] %>
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold" data-value="<%= summary.peak_score %>">
+              <%= summary.peak_score %>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600" data-value="<%= summary.floor_score %>">
+              <%= summary.floor_score %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <h3 class="text-sm font-semibold text-blue-900 mb-2">Draft Strategy Tips:</h3>
+    <ul class="text-sm text-blue-800 space-y-1">
+      <li><strong>High Variance = Good:</strong> In weekly high scoring, you want explosive games, not consistency</li>
+      <li><strong>Peak > Average:</strong> A player who can drop 80+ occasionally is more valuable than steady 50s</li>
+      <li><strong>Check Weeks:</strong> Make sure players have enough games (injuries matter)</li>
+    </ul>
+  </div>
+</div>

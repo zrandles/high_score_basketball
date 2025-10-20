@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  player: one
+  week_number: 1
+  season: MyString
+  fantasy_score: 1
+  games_that_week: 1
+  best_game_id: 1
+
+two:
+  player: two
+  week_number: 1
+  season: MyString
+  fantasy_score: 1
+  games_that_week: 1
+  best_game_id: 1
