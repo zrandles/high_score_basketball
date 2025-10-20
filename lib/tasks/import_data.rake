@@ -1,8 +1,8 @@
 namespace :nba do
-  desc "Import 2023-24 NBA season data for players averaging 10+ PPG"
+  desc "Import 2024-25 NBA season data for players averaging 10+ PPG"
   task import_2023_24: :environment do
-    season = "2023-24"
-    season_start = Date.parse("2023-10-24")
+    season = "2024-25"
+    season_start = Date.parse("2024-10-22")
     min_ppg = 10
 
     puts "\n🏀 Starting NBA data import for #{season} season"
