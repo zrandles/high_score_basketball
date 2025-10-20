@@ -23,5 +23,8 @@ module HighScoreBasketball
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # Add Tailwind build output to asset load path
+    config.assets.paths << Rails.root.join("app/assets/builds")
   end
 end
