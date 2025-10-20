@@ -4,17 +4,48 @@
   </div>
 
   <div class="bg-white rounded-lg shadow p-6 mb-6">
-    <div class="flex justify-between items-start">
+    <div class="flex justify-between items-start mb-4">
       <div>
         <h1 class="text-3xl font-bold text-gray-900 mb-2"><%= @player.name %></h1>
-        <p class="text-gray-600"><%= @player.team %> - 2023-24 Season</p>
+        <p class="text-gray-600"><%= @player.team %> - 2024-25 Season</p>
         <div class="mt-3">
           <%= link_to "View Raw Game Data →", raw_data_player_path(@player), class: "inline-flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium" %>
         </div>
       </div>
       <div class="text-right">
-        <p class="text-sm text-gray-500">Season PPG</p>
-        <p class="text-2xl font-bold text-gray-900"><%= @player.ppg_2023_24&.round(1) || 'N/A' %></p>
+        <p class="text-sm text-gray-500">Total Games</p>
+        <p class="text-2xl font-bold text-gray-900"><%= @total_games %></p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-7 gap-4 pt-4 border-t border-gray-200">
+      <div class="text-center">
+        <p class="text-xs text-gray-500 mb-1">Total PTS</p>
+        <p class="text-lg font-bold text-gray-900"><%= @total_points %></p>
+      </div>
+      <div class="text-center">
+        <p class="text-xs text-gray-500 mb-1">Fantasy PPG</p>
+        <p class="text-lg font-bold text-blue-900"><%= @fantasy_ppg.round(1) %></p>
+      </div>
+      <div class="text-center">
+        <p class="text-xs text-gray-500 mb-1">PTS/G</p>
+        <p class="text-lg font-bold text-gray-900"><%= @points_per_game.round(1) %></p>
+      </div>
+      <div class="text-center">
+        <p class="text-xs text-gray-500 mb-1">REB/G</p>
+        <p class="text-lg font-bold text-gray-900"><%= @rebounds_per_game.round(1) %></p>
+      </div>
+      <div class="text-center">
+        <p class="text-xs text-gray-500 mb-1">AST/G</p>
+        <p class="text-lg font-bold text-gray-900"><%= @assists_per_game.round(1) %></p>
+      </div>
+      <div class="text-center">
+        <p class="text-xs text-gray-500 mb-1">BLK/G</p>
+        <p class="text-lg font-bold text-gray-900"><%= @blocks_per_game.round(1) %></p>
+      </div>
+      <div class="text-center">
+        <p class="text-xs text-gray-500 mb-1">STL/G</p>
+        <p class="text-lg font-bold text-gray-900"><%= @steals_per_game.round(1) %></p>
       </div>
     </div>
   </div>
@@ -57,7 +88,7 @@
               Fantasy Score
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Games Played
+              Scores
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               vs Average
@@ -67,6 +98,7 @@
         <tbody class="bg-white divide-y divide-gray-200">
           <% @weekly_highs.each do |week_high| %>
             <% weekly_upside = @weekly_data[week_high.week_number]&.dig(:upside) || 0.0 %>
+            <% scores = @weekly_data[week_high.week_number]&.dig(:scores) || [] %>
             <tr class="<%= week_high.fantasy_score == @summary.peak_score ? 'bg-green-50' : '' %>">
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                 Week <%= week_high.week_number %>
@@ -79,8 +111,8 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
                 <%= week_high.fantasy_score %>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <%= week_high.games_that_week %>
+              <td class="px-6 py-4 text-sm text-gray-500">
+                <%= scores.join(', ') %>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">
                 +<%= weekly_upside.round(1) %>
