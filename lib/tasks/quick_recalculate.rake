@@ -23,10 +23,8 @@ namespace :nba do
         weekly_upsides = []
 
         weekly_highs.each do |wh|
-          # Get all games for this week
-          week_start = season_start + (wh.week_number - 1).weeks
-          week_end = week_start + 6.days
-          week_games = player.game_logs.where(season: season, game_date: week_start..week_end)
+          # Get all games for this week using week_number
+          week_games = player.game_logs.where(season: season, week_number: wh.week_number)
 
           if week_games.any?
             week_avg = week_games.average(:fantasy_score).to_f
