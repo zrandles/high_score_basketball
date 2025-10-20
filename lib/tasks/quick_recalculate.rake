@@ -3,7 +3,10 @@ namespace :nba do
   task quick_recalculate: :environment do
     season = ENV['SEASON'] || "2024-25"
 
-    puts "\n📊 Quick recalculating avg_score, differential, and games_played for #{season}..."
+    # Season start date for week calculations
+    season_start = season == "2024-25" ? Date.new(2024, 10, 21) : Date.new(2023, 10, 23)
+
+    puts "\n📊 Quick recalculating avg_score, differential (weekly upside), and games_played for #{season}..."
     puts "=" * 60
 
     PlayerSummary.where(season: season).find_each.with_index(1) do |summary, index|
@@ -15,8 +18,24 @@ namespace :nba do
         avg_score = game_logs.average(:fantasy_score).to_f
         games_played = game_logs.count
 
-        # Calculate differential: avg_weekly_high - avg_score
-        differential = summary.avg_weekly_high.to_f - avg_score
+        # Calculate differential: average of weekly (high - weekly_average) values
+        weekly_highs = player.weekly_highs.where(season: season)
+        weekly_upsides = []
+
+        weekly_highs.each do |wh|
+          # Get all games for this week
+          week_start = season_start + (wh.week_number - 1).weeks
+          week_end = week_start + 6.days
+          week_games = player.game_logs.where(season: season, game_date: week_start..week_end)
+
+          if week_games.any?
+            week_avg = week_games.average(:fantasy_score).to_f
+            weekly_upside = wh.fantasy_score - week_avg
+            weekly_upsides << weekly_upside
+          end
+        end
+
+        differential = weekly_upsides.any? ? (weekly_upsides.sum / weekly_upsides.size) : 0.0
 
         # Update summary (skip age for speed)
         summary.update!(
@@ -25,7 +44,7 @@ namespace :nba do
           games_played: games_played
         )
 
-        puts "[#{index}/#{PlayerSummary.where(season: season).count}] #{player.name}: avg=#{avg_score.round(1)}, diff=#{differential.round(1)}, GP=#{games_played}"
+        puts "[#{index}/#{PlayerSummary.where(season: season).count}] #{player.name}: avg=#{avg_score.round(1)}, upside=#{differential.round(1)}, GP=#{games_played}"
       end
     end
 
