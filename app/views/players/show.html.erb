@@ -66,9 +66,7 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <% @weekly_highs.each do |week_high| %>
-            <% diff = week_high.fantasy_score - @summary.avg_weekly_high %>
-            <% diff_class = diff >= 0 ? 'text-green-600' : 'text-red-600' %>
-            <% diff_sign = diff >= 0 ? '+' : '' %>
+            <% weekly_upside = @weekly_data[week_high.week_number]&.dig(:upside) || 0.0 %>
             <tr class="<%= week_high.fantasy_score == @summary.peak_score ? 'bg-green-50' : '' %>">
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                 Week <%= week_high.week_number %>
@@ -84,8 +82,8 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 <%= week_high.games_that_week %>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm <%= diff_class %> font-semibold">
-                <%= diff_sign %><%= diff.round(1) %>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-semibold">
+                +<%= weekly_upside.round(1) %>
               </td>
             </tr>
           <% end %>
