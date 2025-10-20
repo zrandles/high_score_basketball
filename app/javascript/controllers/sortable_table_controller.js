@@ -45,12 +45,13 @@ export default class extends Controller {
       'avg_score': 4,
       'differential': 5,
       'age': 6,
-      'total_points': 7,
-      'games_played': 8,
-      'weeks': 9,
-      'variance': 10,
-      'peak': 11,
-      'floor': 12
+      'total_fantasy_points': 7,
+      'total_basketball_points': 8,
+      'games_played': 9,
+      'weeks': 10,
+      'variance': 11,
+      'peak': 12,
+      'floor': 13
     }
 
     const targetCell = cells[columnIndex[column]]

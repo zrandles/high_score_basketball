@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_20_172103) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_20_172922) do
   create_table "game_logs", force: :cascade do |t|
     t.integer "player_id", null: false
     t.date "game_date"
@@ -40,8 +40,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_20_172103) do
     t.datetime "updated_at", null: false
     t.decimal "avg_score"
     t.decimal "differential"
-    t.integer "total_points"
+    t.integer "total_fantasy_points"
     t.integer "games_played"
+    t.integer "total_basketball_points"
     t.index ["player_id"], name: "index_player_summaries_on_player_id"
   end
 
