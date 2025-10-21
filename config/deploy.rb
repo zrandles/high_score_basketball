@@ -133,8 +133,8 @@ namespace :deploy do
   end
 end
 # Hooks
-Rake::Task['deploy:assets:precompile'].clear_actions
-Rake::Task['deploy:assets:backup_manifest'].clear_actions
+# NOTE: Do NOT clear deploy:assets:precompile or asset compilation will be disabled!
+# The custom asset tasks defined above in namespace :deploy will run correctly.
 
 after 'bundler:install', 'deploy:generate_binstubs'
 before 'deploy:publishing', 'deploy:assets:precompile'
