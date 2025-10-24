@@ -14,9 +14,10 @@ namespace :basketball do
       exit
     end
 
-    Player.includes(:player_summary, :game_logs).find_each do |player|
-      summary = player.player_summary
-      next unless summary&.season == season
+    Player.includes(:game_logs).find_each do |player|
+      # Find the summary for the specific season
+      summary = PlayerSummary.find_by(player_id: player.id, season: season)
+      next unless summary
 
       # Get all game logs for this season
       all_games = player.game_logs.where(season: season).order(:game_date)
