@@ -1,0 +1,96 @@
+<%
+  # Enhanced SVG sparkline with hover tooltips
+  width = 140
+  height = 40
+  padding = 4
+
+  scores = games.map(&:fantasy_score)
+  return if scores.empty?
+
+  max_score = scores.max
+  min_score = scores.min
+  range = max_score - min_score
+  range = 1 if range == 0  # Avoid division by zero
+
+  # Calculate points for the polyline
+  points = scores.each_with_index.map do |score, i|
+    x = (i.to_f / (scores.length - 1)) * (width - padding * 2) + padding
+    y = height - padding - ((score - min_score) / range.to_f * (height - padding * 2))
+    "#{x.round(2)},#{y.round(2)}"
+  end.join(' ')
+
+  # Determine line color based on trend
+  avg = scores.sum / scores.length.to_f
+  color = if avg > season_avg * 1.1
+    '#059669' # Green - hot
+  elsif avg < season_avg * 0.9
+    '#dc2626' # Red - cold
+  else
+    '#6b7280' # Gray - stable
+  end
+%>
+
+<div class="relative group/sparkline inline-block">
+  <svg width="<%= width %>" height="<%= height %>" class="inline-block">
+    <!-- Background fill under line -->
+    <polyline
+      points="<%= padding %>,<%= height - padding %> <%= points %> <%= width - padding %>,<%= height - padding %>"
+      fill="<%= color %>20"
+      stroke="none" />
+
+    <!-- Main line -->
+    <polyline
+      points="<%= points %>"
+      fill="none"
+      stroke="<%= color %>"
+      stroke-width="2.5"
+      stroke-linecap="round"
+      stroke-linejoin="round" />
+
+    <!-- Season average reference line -->
+    <% if season_avg > 0 && season_avg >= min_score && season_avg <= max_score %>
+      <% avg_y = height - padding - ((season_avg - min_score) / range.to_f * (height - padding * 2)) %>
+      <line
+        x1="<%= padding %>"
+        y1="<%= avg_y.round(2) %>"
+        x2="<%= width - padding %>"
+        y2="<%= avg_y.round(2) %>"
+        stroke="#9ca3af"
+        stroke-width="1"
+        stroke-dasharray="3,2"
+        opacity="0.6" />
+    <% end %>
+
+    <!-- Points for each game with hover areas -->
+    <% scores.each_with_index do |score, i| %>
+      <% x = (i.to_f / (scores.length - 1)) * (width - padding * 2) + padding %>
+      <% y = height - padding - ((score - min_score) / range.to_f * (height - padding * 2)) %>
+      <% point_color = score > season_avg ? '#059669' : '#9ca3af' %>
+
+      <!-- Hover area -->
+      <circle
+        cx="<%= x.round(2) %>"
+        cy="<%= y.round(2) %>"
+        r="6"
+        fill="transparent"
+        class="hover:fill-blue-200"
+        data-score="<%= score.round(1) %>"
+        data-game="<%= i + 1 %>">
+        <title>Game <%= i + 1 %>: <%= score.round(1) %> pts</title>
+      </circle>
+
+      <!-- Visible point -->
+      <circle
+        cx="<%= x.round(2) %>"
+        cy="<%= y.round(2) %>"
+        r="2.5"
+        fill="<%= point_color %>"
+        class="pointer-events-none" />
+    <% end %>
+  </svg>
+
+  <!-- Tooltip on hover -->
+  <div class="hidden group-hover/sparkline:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-[10px] rounded whitespace-nowrap z-30 pointer-events-none">
+    Avg: <%= avg.round(1) %> | Season: <%= season_avg.round(1) %>
+  </div>
+</div>

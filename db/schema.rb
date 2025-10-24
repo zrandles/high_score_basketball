@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_20_223025) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_24_155944) do
   create_table "game_logs", force: :cascade do |t|
     t.integer "player_id", null: false
     t.date "game_date"
@@ -25,7 +25,14 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_20_223025) do
     t.string "season"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "minutes_played", default: 0
+    t.boolean "is_overtime", default: false
+    t.index ["game_date"], name: "index_game_logs_on_game_date"
+    t.index ["player_id", "game_date"], name: "index_game_logs_on_player_id_and_game_date"
+    t.index ["player_id", "season"], name: "index_game_logs_on_player_id_and_season"
     t.index ["player_id"], name: "index_game_logs_on_player_id"
+    t.index ["season", "game_date"], name: "index_game_logs_on_season_and_game_date"
+    t.index ["season"], name: "index_game_logs_on_season"
   end
 
   create_table "player_summaries", force: :cascade do |t|
@@ -48,7 +55,17 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_20_223025) do
     t.decimal "projected_fp"
     t.decimal "projected_fp_per_game"
     t.decimal "projected_fp_per_minute"
+    t.decimal "last_3_days_avg", precision: 10, scale: 2, default: "0.0"
+    t.decimal "last_7_days_avg", precision: 10, scale: 2, default: "0.0"
+    t.decimal "last_14_days_avg", precision: 10, scale: 2, default: "0.0"
+    t.integer "last_3_days_games", default: 0
+    t.integer "last_7_days_games", default: 0
+    t.integer "last_14_days_games", default: 0
+    t.decimal "trend_7_days", precision: 10, scale: 2, default: "0.0"
+    t.decimal "last_7_days_high", precision: 10, scale: 2, default: "0.0"
+    t.index ["player_id", "season"], name: "index_player_summaries_on_player_id_and_season", unique: true
     t.index ["player_id"], name: "index_player_summaries_on_player_id"
+    t.index ["season"], name: "index_player_summaries_on_season"
   end
 
   create_table "players", force: :cascade do |t|
@@ -61,6 +78,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_20_223025) do
     t.datetime "updated_at", null: false
     t.integer "age"
     t.string "injury_status"
+    t.index ["nba_id"], name: "index_players_on_nba_id", unique: true
   end
 
   create_table "weekly_highs", force: :cascade do |t|

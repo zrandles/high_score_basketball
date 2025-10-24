@@ -1,31 +1,80 @@
-<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+<div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100" data-controller="waiver-wire">
   <div class="container mx-auto px-3 sm:px-4 lg:px-6 py-6 lg:py-10 max-w-[1800px]">
 
     <!-- Header Section -->
-    <div class="mb-6 lg:mb-10">
+    <div class="mb-6 lg:mb-8">
       <div class="flex items-center gap-3 mb-3">
         <div class="w-1 h-12 bg-gradient-to-b from-blue-600 to-purple-600 rounded-full"></div>
         <div>
           <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 tracking-tight">
-            Weekly High Score Basketball
+            Waiver Wire Pickups
           </h1>
-          <p class="text-base sm:text-lg text-gray-600 font-medium mt-1">2024-25 NBA Season Draft Analysis</p>
+          <p class="text-base sm:text-lg text-gray-600 font-medium mt-1">Find hot players trending above their season average</p>
         </div>
       </div>
       <div class="flex items-center gap-2 mt-4 px-1">
         <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
         <p class="text-xs sm:text-sm text-gray-600 font-medium">
-          <span class="font-bold text-gray-800">Scoring:</span> Points + Rebounds + (2 × Assists) + (3 × Blocks) + (3 × Steals)
+          <span class="font-bold text-gray-800">Updated:</span> <%= Time.current.strftime('%B %d, %Y') %>
         </p>
       </div>
     </div>
 
+    <!-- Search and Filter Controls -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <div class="flex-grow relative">
+          <input type="text"
+                 placeholder="Search player name..."
+                 data-action="input->waiver-wire#handleSearch"
+                 data-waiver-wire-target="searchInput"
+                 class="w-full px-4 py-2.5 pl-10 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <svg class="absolute left-3 top-3 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </div>
+        <div class="flex gap-2">
+          <button data-action="click->waiver-wire#openModal"
+                  class="text-sm px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium whitespace-nowrap transition-colors">
+            Advanced Filters
+          </button>
+          <p class="text-sm text-gray-600 flex items-center px-3" data-waiver-wire-target="resultCount">
+            <%= @players.count %> players
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div data-waiver-wire-target="filterBar" class="hidden"></div>
+
+    <!-- Legend / Key Metrics Helper -->
+    <div class="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border border-blue-200 p-3 mb-4">
+      <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-gray-700">Key:</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <div class="w-3 h-3 bg-green-500 rounded"></div>
+          <span class="text-gray-700"><span class="font-semibold">Hot Score</span> - Performance vs season avg (higher = hotter pickup)</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-lg">🔥</span>
+          <span class="text-gray-700">Hot streak (3+ strong games)</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-green-600 font-bold">↗️</span>
+          <span class="text-gray-700">Trending up (+10%)</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Mobile scroll hint -->
-    <div class="lg:hidden mb-3 flex items-center justify-center gap-2 text-sm text-gray-600 bg-white/60 backdrop-blur-sm py-2 px-4 rounded-lg border border-gray-200">
+    <div class="lg:hidden mb-3 flex items-center justify-center gap-2 text-xs font-semibold text-blue-700 bg-blue-50 py-2.5 px-4 rounded-lg border-2 border-blue-300 animate-pulse">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18"/>
       </svg>
-      <span class="font-medium">Swipe to see all stats</span>
+      <span>Scroll right for more stats</span>
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
       </svg>
@@ -33,291 +82,168 @@
 
     <!-- Main Table -->
     <div class="bg-white rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
-      <div class="overflow-x-auto" style="max-height: calc(100vh - 200px);" class="overflow-y-auto">
-        <table class="min-w-full" data-controller="sortable-table">
-          <thead class="sticky top-0 z-20 shadow-md">
-            <!-- Column group labels -->
-            <tr class="border-b-2 border-gray-300 bg-gradient-to-r from-gray-50 to-slate-100">
-              <th colspan="4" class="px-4 sm:px-5 py-3 sm:py-4 text-xs font-black text-gray-700 uppercase tracking-wider text-left">
-                <div class="flex items-center gap-2">
-                  <div class="w-1 h-6 bg-gray-400 rounded-full"></div>
-                  Player Info
+      <div class="overflow-x-auto overflow-y-auto" style="max-height: calc(100vh - 300px);">
+        <table class="min-w-full" data-waiver-wire-target="table">
+          <thead class="sticky top-0 z-20 shadow-md bg-gradient-to-r from-gray-50 via-white to-gray-50 border-b-2 border-gray-300">
+            <tr>
+              <!-- Hot Score - NEW PRIMARY COLUMN -->
+              <th scope="col" class="sticky left-0 z-30 bg-gradient-to-r from-green-100 to-green-50 px-4 py-3 text-center text-xs font-black text-green-900 uppercase tracking-wide border-r-2 border-green-300" title="Hot pickup score: Recent performance vs season average (0-100, higher = hotter)">
+                <div class="flex flex-col items-center gap-0.5">
+                  <span>Hot</span>
+                  <span>Score</span>
                 </div>
               </th>
-              <th colspan="3" class="px-4 sm:px-5 py-3 sm:py-4 text-xs font-black text-purple-800 uppercase tracking-wider text-center bg-gradient-to-r from-purple-50 to-violet-50 border-l-4 border-purple-400">
-                <div class="flex items-center justify-center gap-2">
-                  <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                  </svg>
-                  Projections
-                </div>
-              </th>
-              <th colspan="8" class="px-4 sm:px-5 py-3 sm:py-4 text-xs font-black text-blue-800 uppercase tracking-wider text-center bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-400">
-                <div class="flex items-center justify-center gap-2">
-                  <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                  </svg>
-                  2024-2025 Season Performance
-                </div>
-              </th>
-            </tr>
 
-            <!-- Column headers -->
-            <tr class="bg-gradient-to-r from-gray-100 via-slate-50 to-gray-100 border-b-2 border-gray-300">
               <!-- Player Info -->
-              <th scope="col" class="sticky left-0 z-10 bg-gray-100 px-2 sm:px-3 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide cursor-pointer hover:bg-gray-200 transition-all group"
-                  data-action="click->sortable-table#sort" data-column="rank">
-                <div class="flex items-center gap-1">
-                  <span class="hidden sm:inline">Rank</span>
-                  <span class="sm:hidden">#</span>
-                  <svg class="w-3 h-3 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                  </svg>
-                </div>
+              <th scope="col" class="sticky left-[73px] z-20 bg-white px-3 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wide cursor-pointer hover:bg-gray-50 transition-all" data-column="name">
+                Player
               </th>
-              <th scope="col" class="px-4 sm:px-5 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide cursor-pointer hover:bg-gray-200 transition-all group"
-                  data-action="click->sortable-table#sort" data-column="player">
-                <div class="flex items-center gap-1">
-                  Player Name
-                  <svg class="w-3 h-3 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                  </svg>
-                </div>
+              <th scope="col" class="px-2 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide" data-column="position">
+                Pos
               </th>
-              <th scope="col" class="px-3 sm:px-4 py-3 sm:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wide cursor-pointer hover:bg-gray-200 transition-all group"
-                  data-action="click->sortable-table#sort" data-column="team">
-                <div class="flex items-center gap-1">
-                  Team
-                  <svg class="w-3 h-3 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                  </svg>
-                </div>
-              </th>
-              <th scope="col" class="px-3 sm:px-4 py-3 sm:py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wide cursor-pointer hover:bg-gray-200 transition-all group"
-                  data-action="click->sortable-table#sort" data-column="age">
-                <div class="flex items-center justify-center gap-1">
-                  Age
-                  <svg class="w-3 h-3 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                  </svg>
-                </div>
+              <th scope="col" class="px-2 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide" data-column="team">
+                Team
               </th>
 
-              <!-- Projections -->
-              <th scope="col" class="px-3 sm:px-4 py-3 sm:py-4 text-center text-xs font-bold text-purple-800 uppercase tracking-wide cursor-pointer hover:bg-purple-100 transition-all border-l-4 border-purple-400 group"
-                  data-action="click->sortable-table#sort" data-column="proj_ppg">
-                <div class="flex flex-col items-center gap-1">
-                  <div class="flex items-center gap-1">
-                    <span>PPG</span>
-                    <svg class="w-3 h-3 text-purple-500 group-hover:text-purple-700 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                    </svg>
-                  </div>
-                  <span class="text-[10px] text-purple-600 font-normal normal-case">Proj</span>
-                </div>
+              <!-- Key Recent Metrics -->
+              <th scope="col" class="px-3 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wide cursor-pointer hover:bg-gray-50 transition-all border-l border-gray-200" data-column="last_7_days_avg" title="Last 7 days average fantasy points">
+                L7 Avg
               </th>
-              <th scope="col" class="px-3 sm:px-4 py-3 sm:py-4 text-center text-xs font-bold text-purple-800 uppercase tracking-wide cursor-pointer hover:bg-purple-100 transition-all group"
-                  data-action="click->sortable-table#sort" data-column="proj_min">
-                <div class="flex flex-col items-center gap-1">
-                  <div class="flex items-center gap-1">
-                    <span>MIN</span>
-                    <svg class="w-3 h-3 text-purple-500 group-hover:text-purple-700 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                    </svg>
-                  </div>
-                  <span class="text-[10px] text-purple-600 font-normal normal-case">Proj</span>
-                </div>
+              <th scope="col" class="px-3 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wide cursor-pointer hover:bg-gray-50 transition-all" data-column="trend_7_days" title="7-day trend: % change from season average">
+                Trend
               </th>
-              <th scope="col" class="px-3 sm:px-4 py-3 sm:py-4 text-center text-xs font-bold text-purple-800 uppercase tracking-wide cursor-pointer hover:bg-purple-100 transition-all group"
-                  data-action="click->sortable-table#sort" data-column="proj_gp">
-                <div class="flex flex-col items-center gap-1">
-                  <div class="flex items-center gap-1">
-                    <span>GP</span>
-                    <svg class="w-3 h-3 text-purple-500 group-hover:text-purple-700 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                    </svg>
-                  </div>
-                  <span class="text-[10px] text-purple-600 font-normal normal-case">Proj</span>
-                </div>
+              <th scope="col" class="px-3 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wide cursor-pointer hover:bg-gray-50 transition-all" data-column="avg_score" title="Season average fantasy points">
+                Season
+              </th>
+              <th scope="col" class="px-3 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide" title="Games played in last 7 days">
+                GP
               </th>
 
-              <!-- 2024-2025 Performance -->
-              <th scope="col" class="px-4 sm:px-5 py-3 sm:py-4 text-center text-xs font-black text-blue-800 uppercase tracking-wide cursor-pointer hover:bg-blue-100 transition-all border-l-4 border-blue-400 group"
-                  data-action="click->sortable-table#sort" data-column="variance" title="Boom/bust potential - higher is better for weekly format">
-                <div class="flex flex-col items-center gap-1">
-                  <div class="flex items-center gap-1">
-                    <span>Variance</span>
-                    <svg class="w-3 h-3 text-blue-500 group-hover:text-blue-700 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                    </svg>
-                  </div>
-                </div>
-              </th>
-              <th scope="col" class="px-4 sm:px-5 py-3 sm:py-4 text-center text-xs font-black text-blue-800 uppercase tracking-wide cursor-pointer hover:bg-blue-100 transition-all group"
-                  data-action="click->sortable-table#sort" data-column="differential" title="Gap between weekly high and average score">
-                <div class="flex flex-col items-center gap-1">
-                  <div class="flex items-center gap-1">
-                    <span>Upside</span>
-                    <svg class="w-3 h-3 text-blue-500 group-hover:text-blue-700 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                    </svg>
-                  </div>
-                </div>
-              </th>
-              <th scope="col" class="px-4 sm:px-5 py-3 sm:py-4 text-center text-xs font-black text-blue-800 uppercase tracking-wide cursor-pointer hover:bg-blue-100 transition-all group"
-                  data-action="click->sortable-table#sort" data-column="avg_high" title="Average of best weekly scores">
-                <div class="flex flex-col items-center gap-1">
-                  <div class="flex items-center gap-1">
-                    <span class="whitespace-nowrap">Avg High</span>
-                    <svg class="w-3 h-3 text-blue-500 group-hover:text-blue-700 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                    </svg>
-                  </div>
-                </div>
-              </th>
-              <th scope="col" class="px-4 sm:px-5 py-3 sm:py-4 text-center text-xs font-black text-blue-800 uppercase tracking-wide cursor-pointer hover:bg-blue-100 transition-all group"
-                  data-action="click->sortable-table#sort" data-column="peak" title="Best single week performance">
-                <div class="flex flex-col items-center gap-1">
-                  <div class="flex items-center gap-1">
-                    <span>Peak</span>
-                    <svg class="w-3 h-3 text-blue-500 group-hover:text-blue-700 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                    </svg>
-                  </div>
-                </div>
-              </th>
-              <th scope="col" class="px-4 sm:px-5 py-3 sm:py-4 text-center text-xs font-black text-blue-800 uppercase tracking-wide cursor-pointer hover:bg-blue-100 transition-all group"
-                  data-action="click->sortable-table#sort" data-column="floor" title="Worst weekly score">
-                <div class="flex flex-col items-center gap-1">
-                  <div class="flex items-center gap-1">
-                    <span>Floor</span>
-                    <svg class="w-3 h-3 text-blue-500 group-hover:text-blue-700 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                    </svg>
-                  </div>
-                </div>
-              </th>
-              <th scope="col" class="px-4 sm:px-5 py-3 sm:py-4 text-center text-xs font-black text-blue-800 uppercase tracking-wide cursor-pointer hover:bg-blue-100 transition-all group"
-                  data-action="click->sortable-table#sort" data-column="avg_score" title="Season average per game">
-                <div class="flex flex-col items-center gap-1">
-                  <div class="flex items-center gap-1">
-                    <span class="whitespace-nowrap">PPG</span>
-                    <svg class="w-3 h-3 text-blue-500 group-hover:text-blue-700 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                    </svg>
-                  </div>
-                </div>
-              </th>
-              <th scope="col" class="px-3 sm:px-4 py-3 sm:py-4 text-center text-xs font-black text-blue-800 uppercase tracking-wide cursor-pointer hover:bg-blue-100 transition-all group"
-                  data-action="click->sortable-table#sort" data-column="weeks" title="Weeks with games played">
-                <div class="flex flex-col items-center gap-1">
-                  <div class="flex items-center gap-1">
-                    <span>Weeks</span>
-                    <svg class="w-3 h-3 text-blue-500 group-hover:text-blue-700 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                    </svg>
-                  </div>
-                </div>
-              </th>
-              <th scope="col" class="px-3 sm:px-4 py-3 sm:py-4 text-center text-xs font-black text-blue-800 uppercase tracking-wide cursor-pointer hover:bg-blue-100 transition-all group"
-                  data-action="click->sortable-table#sort" data-column="games_played">
-                <div class="flex flex-col items-center gap-1">
-                  <div class="flex items-center gap-1">
-                    <span>GP</span>
-                    <svg class="w-3 h-3 text-blue-500 group-hover:text-blue-700 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-                    </svg>
-                  </div>
-                </div>
+              <!-- Sparkline -->
+              <th scope="col" class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wide border-l border-gray-200" title="Last 14 games performance trend">
+                Last 14 Games
               </th>
             </tr>
           </thead>
 
-          <tbody class="bg-white divide-y divide-gray-100" data-sortable-table-target="tbody">
+          <tbody class="bg-white divide-y divide-gray-100" data-waiver-wire-target="tbody">
             <% @players.each_with_index do |player, index| %>
               <% summary = player.player_summary %>
-              <% row_bg = index.even? ? 'bg-white' : 'bg-gradient-to-r from-slate-50/30 to-blue-50/20' %>
-              <tr class="<%= row_bg %> hover:bg-gradient-to-r hover:from-blue-100/50 hover:to-indigo-100/30 cursor-pointer transition-all duration-150 border-b border-gray-100 group"
+
+              <%# Calculate core metrics %>
+              <% recent_games = @recent_games_by_player[player.id] || [] %>
+              <% season_avg = summary.avg_score || 0 %>
+              <% last_7_avg = summary.last_7_days_avg || 0 %>
+              <% trend = summary.trend_7_days || 0 %>
+              <% games_played = summary.last_7_days_games || 0 %>
+
+              <%# Calculate HOT SCORE (0-100) %>
+              <%# Formula: Combine recent performance + trend + consistency %>
+              <% performance_vs_season = season_avg > 0 ? ((last_7_avg - season_avg) / season_avg.to_f * 100) : 0 %>
+              <% hot_streak = recent_games.count >= 3 && recent_games.select { |g| g.fantasy_score > season_avg }.count >= 3 %>
+              <% hot_score = [0, [100, (performance_vs_season * 0.6) + (trend * 0.4) + (hot_streak ? 20 : 0)].min].max.round %>
+
+              <%# Determine row coloring based on hot score %>
+              <% if hot_score >= 70 %>
+                <% row_bg = 'bg-gradient-to-r from-green-50 to-emerald-50' %>
+                <% score_bg = 'bg-gradient-to-br from-green-500 to-emerald-600' %>
+                <% score_text = 'text-white' %>
+              <% elsif hot_score >= 40 %>
+                <% row_bg = 'bg-gradient-to-r from-yellow-50/50 to-green-50/30' %>
+                <% score_bg = 'bg-gradient-to-br from-yellow-400 to-orange-500' %>
+                <% score_text = 'text-white' %>
+              <% else %>
+                <% row_bg = index.even? ? 'bg-white' : 'bg-gray-50/30' %>
+                <% score_bg = 'bg-gradient-to-br from-gray-400 to-gray-500' %>
+                <% score_text = 'text-white' %>
+              <% end %>
+
+              <%# Calculate other indicators %>
+              <% trending_up = trend > 10 %>
+              <% trending_down = trend < -10 %>
+
+              <tr class="<%= row_bg %> hover:bg-blue-100 hover:shadow-md cursor-pointer transition-all duration-150 border-b border-gray-200 group"
+                  data-player-name="<%= player.name.downcase %>"
+                  data-position="<%= player.position %>"
+                  data-team="<%= player.team %>"
+                  data-hot-score="<%= hot_score %>"
+                  data-last-7-avg="<%= last_7_avg %>"
+                  data-trend="<%= trend %>"
+                  data-last-7-high="<%= summary.last_7_days_high || 0 %>"
+                  data-season-avg="<%= season_avg %>"
+                  data-last-14-avg="<%= summary.last_14_days_avg || 0 %>"
+                  data-games-7d="<%= games_played %>"
+                  data-games-14d="<%= summary.last_14_days_games || 0 %>"
+                  data-trending-status="<%= trending_up ? 'up' : (trending_down ? 'down' : 'stable') %>"
                   onclick="window.location='<%= player_path(player) %>'">
 
-                <!-- Player Info -->
-                <td class="sticky left-0 z-10 <%= row_bg %> group-hover:bg-gradient-to-r group-hover:from-blue-100/50 group-hover:to-transparent px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap" data-value="<%= index + 1 %>">
-                  <div class="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 text-white text-xs sm:text-sm font-black shadow-md">
-                    <%= index + 1 %>
+                <!-- HOT SCORE COLUMN -->
+                <td class="sticky left-0 z-20 <%= row_bg %> group-hover:bg-blue-100 px-4 py-4 whitespace-nowrap border-r-2 border-green-200">
+                  <div class="flex flex-col items-center gap-1">
+                    <div class="<%= score_bg %> <%= score_text %> w-12 h-12 rounded-full flex items-center justify-center text-lg font-black shadow-lg">
+                      <%= hot_score %>
+                    </div>
+                    <% if hot_streak %>
+                      <span class="text-lg" title="Hot streak - 3+ games above season average">🔥</span>
+                    <% end %>
                   </div>
                 </td>
-                <td class="px-4 sm:px-5 py-3 sm:py-4 whitespace-nowrap" data-value="<%= player.name %>" onclick="event.stopPropagation()">
-                  <%= link_to player.name, player_path(player),
-                      class: "text-blue-700 hover:text-blue-900 font-bold text-sm sm:text-base hover:underline decoration-2 underline-offset-2 transition-all" %>
+
+                <!-- Player Info -->
+                <td class="sticky left-[73px] z-10 <%= row_bg %> group-hover:bg-blue-100 px-3 py-4 whitespace-nowrap" onclick="event.stopPropagation()">
+                  <div class="flex items-center gap-2">
+                    <%= link_to player.name, player_path(player),
+                        class: "text-blue-700 hover:text-blue-900 font-bold text-sm hover:underline decoration-2 underline-offset-2 transition-all" %>
+                  </div>
                 </td>
-                <td class="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap" data-value="<%= player.team %>">
-                  <span class="inline-block px-2 sm:px-2.5 py-1 text-xs font-black text-gray-700 uppercase tracking-wider bg-gray-100 rounded-md border border-gray-200">
+                <td class="px-2 py-4 whitespace-nowrap text-center">
+                  <span class="inline-block px-1.5 py-0.5 text-[10px] font-semibold text-gray-600 uppercase bg-gray-100 rounded">
+                    <%= player.position %>
+                  </span>
+                </td>
+                <td class="px-2 py-4 whitespace-nowrap text-center">
+                  <span class="text-xs text-gray-600 font-medium">
                     <%= player.team %>
                   </span>
                 </td>
-                <td class="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-center" data-value="<%= player.age || 0 %>">
-                  <span class="text-sm sm:text-base text-gray-700 font-semibold">
-                    <%= player.age || '-' %>
+
+                <!-- Key Metrics -->
+                <td class="px-3 py-4 whitespace-nowrap text-center border-l border-gray-200">
+                  <span class="text-base font-bold <%= last_7_avg > season_avg ? 'text-green-700' : 'text-gray-700' %>">
+                    <%= last_7_avg > 0 ? last_7_avg.round(1) : '-' %>
+                  </span>
+                </td>
+                <td class="px-3 py-4 whitespace-nowrap text-center">
+                  <div class="flex items-center justify-center gap-1">
+                    <% if trending_up %>
+                      <span class="text-green-600">↗️</span>
+                    <% elsif trending_down %>
+                      <span class="text-red-600">↘️</span>
+                    <% end %>
+                    <span class="text-sm font-semibold <%= trending_up ? 'text-green-700' : (trending_down ? 'text-red-700' : 'text-gray-700') %>">
+                      <%= trend > 0 ? '+' : '' %><%= trend.round(1) %>%
+                    </span>
+                  </div>
+                </td>
+                <td class="px-3 py-4 whitespace-nowrap text-center">
+                  <span class="text-sm font-semibold text-gray-700">
+                    <%= season_avg.round(1) %>
+                  </span>
+                </td>
+                <td class="px-3 py-4 whitespace-nowrap text-center">
+                  <span class="text-xs text-gray-600 font-medium">
+                    <%= games_played %>
                   </span>
                 </td>
 
-                <!-- Projections -->
-                <td class="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-center border-l-4 border-purple-200" data-value="<%= summary.projected_fp_per_game&.round(1) || 0 %>">
-                  <span class="text-sm sm:text-base text-purple-700 font-bold">
-                    <%= summary.projected_fp_per_game&.round(1) || '-' %>
-                  </span>
-                </td>
-                <td class="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-center" data-value="<%= summary.projected_minutes || 0 %>">
-                  <span class="text-sm sm:text-base text-purple-700 font-semibold">
-                    <%= summary.projected_minutes || '-' %>
-                  </span>
-                </td>
-                <td class="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-center" data-value="<%= summary.projected_games || 0 %>">
-                  <span class="text-sm sm:text-base text-purple-700 font-semibold">
-                    <%= summary.projected_games || '-' %>
-                  </span>
-                </td>
-
-                <!-- 2024-2025 Performance -->
-                <td class="px-4 sm:px-5 py-3 sm:py-4 whitespace-nowrap text-center border-l-4 border-blue-400" data-value="<%= summary.variance.round(1) %>">
-                  <span class="text-base sm:text-lg text-blue-700 font-bold">
-                    <%= summary.variance.round(1) %>
-                  </span>
-                </td>
-                <td class="px-4 sm:px-5 py-3 sm:py-4 whitespace-nowrap text-center" data-value="<%= summary.differential&.round(1) || 0 %>">
-                  <span class="text-base sm:text-lg text-blue-700 font-bold">
-                    <%= summary.differential ? "+#{summary.differential.round(1)}" : '-' %>
-                  </span>
-                </td>
-                <td class="px-4 sm:px-5 py-3 sm:py-4 whitespace-nowrap text-center" data-value="<%= summary.avg_weekly_high.round(1) %>">
-                  <span class="text-base sm:text-lg text-blue-700 font-bold">
-                    <%= summary.avg_weekly_high.round(1) %>
-                  </span>
-                </td>
-                <td class="px-4 sm:px-5 py-3 sm:py-4 whitespace-nowrap text-center" data-value="<%= summary.peak_score %>">
-                  <span class="text-base sm:text-lg text-blue-700 font-bold">
-                    <%= summary.peak_score %>
-                  </span>
-                </td>
-                <td class="px-4 sm:px-5 py-3 sm:py-4 whitespace-nowrap text-center" data-value="<%= summary.floor_score %>">
-                  <span class="text-base sm:text-lg text-blue-700 font-bold">
-                    <%= summary.floor_score %>
-                  </span>
-                </td>
-                <td class="px-4 sm:px-5 py-3 sm:py-4 whitespace-nowrap text-center" data-value="<%= summary.avg_score&.round(1) || 0 %>">
-                  <span class="text-base sm:text-lg text-blue-700 font-bold">
-                    <%= summary.avg_score&.round(1) || '-' %>
-                  </span>
-                </td>
-                <td class="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-center" data-value="<%= summary.non_zero_weeks %>">
-                  <span class="text-sm sm:text-base text-blue-700 font-semibold">
-                    <%= summary.non_zero_weeks %>
-                  </span>
-                </td>
-                <td class="px-3 sm:px-4 py-3 sm:py-4 whitespace-nowrap text-center" data-value="<%= summary.games_played || 0 %>">
-                  <span class="text-sm sm:text-base text-blue-700 font-semibold">
-                    <%= summary.games_played || '-' %>
-                  </span>
+                <!-- Sparkline -->
+                <td class="px-4 py-4 border-l border-gray-200">
+                  <% last_14_games = @last_14_games_by_player[player.id] || [] %>
+                  <% if last_14_games.any? %>
+                    <%= render partial: 'shared/sparkline', locals: { games: last_14_games, season_avg: season_avg } %>
+                  <% else %>
+                    <span class="text-xs text-gray-400">No data</span>
+                  <% end %>
                 </td>
               </tr>
             <% end %>
@@ -326,5 +252,89 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- Embedded data for JavaScript -->
+<script id="players-data" type="application/json">
+  <%= raw @players.map { |p|
+    {
+      id: p.id,
+      name: p.name,
+      position: p.position,
+      team: p.team,
+      last_7_days_avg: p.player_summary.last_7_days_avg&.round(1),
+      trend_7_days: p.player_summary.trend_7_days&.round(1),
+      last_7_days_high: p.player_summary.last_7_days_high,
+      avg_score: p.player_summary.avg_score&.round(1),
+      last_14_days_avg: p.player_summary.last_14_days_avg&.round(1),
+      last_7_days_games: p.player_summary.last_7_days_games,
+      last_14_days_games: p.player_summary.last_14_days_games
+    }
+  }.to_json %>
+</script>
+
+<script id="percentile-values" type="application/json">
+  <%= raw @percentiles.to_json %>
+</script>
+
+<!-- Column Configuration Modal -->
+<div data-waiver-wire-target="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-action="click->waiver-wire#closeModal">
+  <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" data-action="click->waiver-wire#stopPropagation">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-2xl font-bold text-gray-900">Configure Table Filters</h2>
+      <p class="text-sm text-gray-600 mt-1">Customize which columns to show and add filters</p>
+    </div>
+
+    <div class="p-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Hidden Columns -->
+        <div>
+          <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center justify-between">
+            <span>Hidden Columns</span>
+            <span class="text-xs font-normal text-gray-500" id="hidden-count">0</span>
+          </h3>
+          <div class="bg-gray-50 rounded-lg border border-gray-200 min-h-[200px]" data-waiver-wire-target="hiddenList">
+          </div>
+        </div>
+
+        <!-- Shown Columns -->
+        <div>
+          <h3 class="text-sm font-bold text-gray-700 mb-3 flex items-center justify-between">
+            <span>Visible Columns</span>
+            <span class="text-xs font-normal text-gray-500" id="shown-count">0</span>
+          </h3>
+          <div class="bg-gray-50 rounded-lg border border-gray-200 min-h-[200px]" data-waiver-wire-target="shownList">
+          </div>
+        </div>
+
+        <!-- Featured Columns (with filters) -->
+        <div>
+          <h3 class="text-sm font-bold text-blue-700 mb-3 flex items-center justify-between">
+            <span>Filtered Columns</span>
+            <span class="text-xs font-normal text-blue-500" id="featured-count">0</span>
+          </h3>
+          <div class="bg-blue-50 rounded-lg border border-blue-200 min-h-[200px]" data-waiver-wire-target="featuredList">
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-gray-200 flex justify-between">
+        <button data-action="click->waiver-wire#resetConfiguration"
+                class="px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium">
+          Reset to Defaults
+        </button>
+        <div class="flex gap-3">
+          <button data-action="click->waiver-wire#closeModal"
+                  class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg font-medium">
+            Cancel
+          </button>
+          <button data-action="click->waiver-wire#saveConfiguration"
+                  class="px-6 py-2 text-sm text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium">
+            Apply Changes
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
