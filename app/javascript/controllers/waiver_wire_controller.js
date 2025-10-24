@@ -34,23 +34,23 @@ export default class extends Controller {
   }
 
   /**
-   * Load example data from embedded JSON script tag
+   * Load player data from embedded JSON script tag
    */
   loadExamples() {
     try {
-      const dataScript = document.getElementById('examples-data')
+      const dataScript = document.getElementById('players-data')
       if (!dataScript) {
-        console.error('❌ No examples-data script tag found')
-        this.examples = []
+        console.error('❌ No players-data script tag found')
+        this.players = []
         return
       }
 
       const jsonText = dataScript.textContent.trim()
-      this.examples = JSON.parse(jsonText)
-      console.log(`✅ Loaded ${this.examples.length} examples`)
+      this.players = JSON.parse(jsonText)
+      console.log(`✅ Loaded ${this.players.length} players`)
     } catch (e) {
-      console.error('❌ Failed to parse examples data:', e)
-      this.examples = []
+      console.error('❌ Failed to parse players data:', e)
+      this.players = []
     }
   }
 
@@ -147,7 +147,7 @@ export default class extends Controller {
       this.shownColumns.includes(c.key) || this.featuredColumns[c.key]
     )
 
-    console.log(`Building table with ${visibleColumns.length} visible columns and ${this.examples.length} examples`)
+    console.log(`Building table with ${visibleColumns.length} visible columns and ${this.players.length} players`)
 
     // Pre-calculate percentiles for all filterable columns for highlighting
     this.columnPercentiles = this.calculateAllPercentiles()
@@ -158,7 +158,7 @@ export default class extends Controller {
 
     // Build table rows
     const tbody = this.tbodyTarget
-    tbody.innerHTML = this.examples.map(example => this.buildTableRow(example, visibleColumns)).join('')
+    tbody.innerHTML = this.players.map(example => this.buildTableRow(example, visibleColumns)).join('')
 
     // Store rows for filtering
     this.allRows = Array.from(tbody.querySelectorAll('tr'))
@@ -174,7 +174,7 @@ export default class extends Controller {
     this.allColumns.filter(c => c.filterable).forEach(col => {
       const values = []
 
-      this.examples.forEach(example => {
+      this.players.forEach(example => {
         const value = example[col.key]
         if (value !== null && value !== undefined && value !== '' && !isNaN(parseFloat(value))) {
           values.push(parseFloat(value))
@@ -732,7 +732,7 @@ export default class extends Controller {
    */
   updateResultCount(count) {
     if (this.hasResultCountTarget) {
-      this.resultCountTarget.textContent = `Showing ${count} of ${this.allRows.length} examples`
+      this.resultCountTarget.textContent = `Showing ${count} of ${this.allRows.length} players`
     }
   }
 
