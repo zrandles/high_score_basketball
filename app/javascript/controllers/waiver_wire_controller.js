@@ -14,17 +14,30 @@ export default class extends Controller {
 
   connect() {
     console.log('Waiver Wire controller connected!')
-    this.searchTerm = ''
-    this.sortColumn = null
-    this.sortDirection = 'desc'
-    this.loadPlayers()
-    this.loadPercentiles()
-    this.initializeColumns()
-    this.loadState()
-    this.applyFilters()
-    this.renderModal()
-    this.renderFilterBar()
-    this.attachSortListeners()
+    try {
+      this.searchTerm = ''
+      this.sortColumn = null
+      this.sortDirection = 'desc'
+      console.log('Loading players...')
+      this.loadPlayers()
+      console.log('Loading percentiles...')
+      this.loadPercentiles()
+      console.log('Initializing columns...')
+      this.initializeColumns()
+      console.log('Loading state...')
+      this.loadState()
+      console.log('Applying filters...')
+      this.applyFilters()
+      console.log('Rendering modal...')
+      this.renderModal()
+      console.log('Rendering filter bar...')
+      this.renderFilterBar()
+      console.log('Attaching sort listeners...')
+      this.attachSortListeners()
+      console.log('✅ Waiver Wire controller fully initialized!')
+    } catch (e) {
+      console.error('❌ Error in connect():', e)
+    }
   }
 
   /**
@@ -465,10 +478,17 @@ export default class extends Controller {
 
   // Modal actions
   openModal() {
-    this.modalTarget.classList.remove('hidden')
+    console.log('openModal() called')
+    try {
+      this.modalTarget.classList.remove('hidden')
+      console.log('Modal opened successfully')
+    } catch (e) {
+      console.error('❌ Error opening modal:', e)
+    }
   }
 
   closeModal() {
+    console.log('closeModal() called')
     this.modalTarget.classList.add('hidden')
   }
 
@@ -549,13 +569,19 @@ export default class extends Controller {
    * Attach sort listeners to column headers
    */
   attachSortListeners() {
-    const headers = this.tableTarget.querySelectorAll('th[data-column]')
-    headers.forEach(header => {
-      header.style.cursor = 'pointer'
-      header.addEventListener('click', (e) => {
-        this.handleSort(e.currentTarget.dataset.column)
+    try {
+      const headers = this.tableTarget.querySelectorAll('th[data-column]')
+      console.log(`Found ${headers.length} sortable headers`)
+      headers.forEach(header => {
+        header.style.cursor = 'pointer'
+        header.addEventListener('click', (e) => {
+          console.log('Sort clicked:', e.currentTarget.dataset.column)
+          this.handleSort(e.currentTarget.dataset.column)
+        })
       })
-    })
+    } catch (e) {
+      console.error('❌ Error in attachSortListeners:', e)
+    }
   }
 
   /**
