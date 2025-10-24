@@ -28,13 +28,12 @@ export default class extends Controller {
       this.loadState()
       console.log('Applying filters...')
       this.applyFilters()
-      console.log('Rendering modal...')
-      this.renderModal()
       console.log('Rendering filter bar...')
       this.renderFilterBar()
       console.log('Attaching sort listeners...')
       this.attachSortListeners()
       console.log('✅ Waiver Wire controller fully initialized!')
+      // Note: renderModal() is called lazily when modal is first opened
     } catch (e) {
       console.error('❌ Error in connect():', e)
     }
@@ -480,6 +479,8 @@ export default class extends Controller {
   openModal() {
     console.log('openModal() called')
     try {
+      // Render modal content before showing it
+      this.renderModal()
       this.modalTarget.classList.remove('hidden')
       console.log('Modal opened successfully')
     } catch (e) {
