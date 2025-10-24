@@ -40,10 +40,11 @@ gem "thruster", require: false
 # Use Tailwind CSS [https://github.com/rails/tailwindcss-rails]
 gem "tailwindcss-rails"
 
-group :development, :test do
-  # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
-  gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
+# Debug gem - available in all environments for console/runner commands
+# See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
+gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
 
+group :development, :test do
   # Static analysis for security vulnerabilities [https://brakemanscanner.org/]
   gem "brakeman", require: false
 
