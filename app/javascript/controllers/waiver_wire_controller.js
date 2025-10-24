@@ -15,6 +15,8 @@ export default class extends Controller {
   connect() {
     console.log('Waiver Wire controller connected!')
     this.searchTerm = ''
+    this.sortColumn = null
+    this.sortDirection = 'desc'
     this.loadPlayers()
     this.loadPercentiles()
     this.initializeColumns()
@@ -22,6 +24,7 @@ export default class extends Controller {
     this.applyFilters()
     this.renderModal()
     this.renderFilterBar()
+    this.attachSortListeners()
   }
 
   /**
@@ -539,6 +542,101 @@ export default class extends Controller {
     if (confirm('Reset all filter settings to defaults?')) {
       localStorage.removeItem('waiverWireFilterState')
       location.reload()
+    }
+  }
+
+  /**
+   * Attach sort listeners to column headers
+   */
+  attachSortListeners() {
+    const headers = this.tableTarget.querySelectorAll('th[data-column]')
+    headers.forEach(header => {
+      header.style.cursor = 'pointer'
+      header.addEventListener('click', (e) => {
+        this.handleSort(e.currentTarget.dataset.column)
+      })
+    })
+  }
+
+  /**
+   * Handle column sorting
+   */
+  handleSort(column) {
+    // Toggle direction if clicking same column, otherwise default to descending
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'desc' ? 'asc' : 'desc'
+    } else {
+      this.sortColumn = column
+      this.sortDirection = 'desc'
+    }
+
+    this.sortRows()
+    this.updateSortIndicators()
+  }
+
+  /**
+   * Sort rows by current column and direction
+   */
+  sortRows() {
+    if (!this.sortColumn) return
+
+    const dataAttr = this.camelCase(this.sortColumn)
+
+    // Sort allRows array
+    this.allRows.sort((a, b) => {
+      let aVal, bVal
+
+      if (this.sortColumn === 'name') {
+        aVal = a.dataset.playerName || ''
+        bVal = b.dataset.playerName || ''
+        const comparison = aVal.localeCompare(bVal)
+        return this.sortDirection === 'asc' ? comparison : -comparison
+      } else if (this.sortColumn === 'position' || this.sortColumn === 'team') {
+        aVal = a.dataset[this.sortColumn] || ''
+        bVal = b.dataset[this.sortColumn] || ''
+        const comparison = aVal.localeCompare(bVal)
+        return this.sortDirection === 'asc' ? comparison : -comparison
+      } else {
+        // Numeric columns (including hot-score which is already calculated in data attribute)
+        aVal = parseFloat(a.dataset[dataAttr])
+        bVal = parseFloat(b.dataset[dataAttr])
+
+        // Handle NaN values (put them at the end)
+        if (isNaN(aVal) && isNaN(bVal)) return 0
+        if (isNaN(aVal)) return 1
+        if (isNaN(bVal)) return -1
+
+        return this.sortDirection === 'desc' ? bVal - aVal : aVal - bVal
+      }
+    })
+
+    // Reorder DOM elements
+    this.allRows.forEach(row => {
+      this.tbodyTarget.appendChild(row)
+    })
+  }
+
+  /**
+   * Update sort direction indicators in headers
+   */
+  updateSortIndicators() {
+    // Remove all existing indicators
+    this.tableTarget.querySelectorAll('th[data-column]').forEach(header => {
+      const existing = header.querySelector('.sort-indicator')
+      if (existing) existing.remove()
+      header.classList.remove('bg-blue-100')
+    })
+
+    // Add indicator to sorted column
+    if (this.sortColumn) {
+      const header = this.tableTarget.querySelector(`th[data-column="${this.sortColumn}"]`)
+      if (header) {
+        header.classList.add('bg-blue-100')
+        const indicator = document.createElement('span')
+        indicator.className = 'sort-indicator ml-1 text-blue-600 font-bold'
+        indicator.textContent = this.sortDirection === 'desc' ? '▼' : '▲'
+        header.appendChild(indicator)
+      }
     }
   }
 }

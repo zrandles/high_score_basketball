@@ -70,6 +70,12 @@ class PlayersController < ApplicationController
     @weekly_highs = @player.weekly_highs.where(season: '2024-25').order(:week_number)
     @summary = @player.player_summary
 
+    # Handle case where player has no summary (redirect with notice)
+    unless @summary
+      redirect_to players_path, alert: "Player summary not available for #{@player.name}"
+      return
+    end
+
     # Get all game logs for season stats
     all_games = @player.game_logs.where(season: '2024-25')
 
