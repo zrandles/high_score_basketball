@@ -2,13 +2,13 @@ class PlayersController < ApplicationController
   def index
     @players = Player.includes(:player_summary)
                      .joins(:player_summary)
-                     .where(player_summaries: { season: '2024-25' })
+                     .where(player_summaries: { season: '2025-26' })
                      .order(Arel.sql('player_summaries.last_7_days_avg DESC NULLS LAST'))
 
     # Preload recent game logs for ALL players in optimized queries
     # This eliminates N+1 queries in the view (was 384 queries per page load!)
     player_ids = @players.pluck(:id)
-    season = '2024-25'
+    season = '2025-26'
     cutoff_date = 14.days.ago
 
     # Load recent games for hot/cold streak calculation
@@ -29,7 +29,7 @@ class PlayersController < ApplicationController
 
   def show
     @player = Player.includes(:player_summary, :weekly_highs, :game_logs).find(params[:id])
-    @weekly_highs = @player.weekly_highs.where(season: '2024-25').order(:week_number)
+    @weekly_highs = @player.weekly_highs.where(season: '2025-26').order(:week_number)
     @summary = @player.player_summary
 
     # Handle case where player has no summary (redirect with notice)
@@ -39,7 +39,7 @@ class PlayersController < ApplicationController
     end
 
     # Get all game logs for season stats
-    all_games = @player.game_logs.where(season: '2024-25')
+    all_games = @player.game_logs.where(season: '2025-26')
 
     # Calculate season totals and per-game averages
     @total_games = all_games.count
@@ -61,7 +61,7 @@ class PlayersController < ApplicationController
 
     @weekly_highs.each do |wh|
       # Use week_number field to match games (don't calculate date ranges)
-      week_games = @player.game_logs.where(season: '2024-25', week_number: wh.week_number).order(:game_date)
+      week_games = @player.game_logs.where(season: '2025-26', week_number: wh.week_number).order(:game_date)
 
       if week_games.any?
         week_avg = week_games.average(:fantasy_score).to_f
@@ -77,7 +77,7 @@ class PlayersController < ApplicationController
 
   def raw_data
     @player = Player.includes(:game_logs).find(params[:id])
-    @game_logs = @player.game_logs.where(season: '2024-25').order(:game_date)
+    @game_logs = @player.game_logs.where(season: '2025-26').order(:game_date)
   end
 
   private

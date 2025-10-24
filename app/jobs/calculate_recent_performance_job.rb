@@ -3,7 +3,7 @@ class CalculateRecentPerformanceJob < ApplicationJob
 
   def perform
     # Run the existing rake task logic directly
-    season = '2024-25'
+    season = '2025-26'
     cutoff_date = Date.today
 
     # For development/testing, use the most recent game date in the database

@@ -1,7 +1,7 @@
 namespace :basketball do
   desc "Calculate recent performance metrics for all players"
   task calculate_recent_performance: :environment do
-    season = '2024-25'
+    season = '2025-26'
     cutoff_date = Date.today
 
     # For development/testing, use the most recent game date in the database
