@@ -465,7 +465,7 @@ export default class extends Controller {
   interpolateValue(columnData, percentile) {
     // Check if we have exact percentile
     if (columnData[percentile.toString()]) {
-      return columnData[percentile.toString()]
+      return parseFloat(columnData[percentile.toString()])
     }
 
     // Find bounding percentiles
@@ -481,10 +481,10 @@ export default class extends Controller {
       }
     }
 
-    const lowerV = columnData[lower.toString()]
-    const upperV = columnData[upper.toString()]
+    const lowerV = parseFloat(columnData[lower.toString()])
+    const upperV = parseFloat(columnData[upper.toString()])
 
-    if (lowerV === undefined || upperV === undefined) return null
+    if (isNaN(lowerV) || isNaN(upperV)) return null
 
     const fraction = (percentile - lower) / (upper - lower)
     return lowerV + fraction * (upperV - lowerV)
