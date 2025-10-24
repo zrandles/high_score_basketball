@@ -15,7 +15,10 @@
       <div class="flex items-center gap-2 mt-4 px-1">
         <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
         <p class="text-xs sm:text-sm text-gray-600 font-medium">
-          <span class="font-bold text-gray-800">Updated:</span> <%= Time.current.strftime('%B %d, %Y') %>
+          <span class="font-bold text-gray-800">Updated:</span>
+          <span id="update-timestamp" data-timestamp="<%= Time.current.iso8601 %>">
+            <%= Time.current.strftime('%B %d, %Y at %I:%M %p') %>
+          </span>
         </p>
       </div>
     </div>
@@ -168,13 +171,13 @@
                   data-position="<%= player.position %>"
                   data-team="<%= player.team %>"
                   data-hot-score="<%= hot_score %>"
-                  data-last-7-avg="<%= last_7_avg %>"
-                  data-trend="<%= trend %>"
-                  data-last-7-high="<%= summary.last_7_days_high || 0 %>"
-                  data-season-avg="<%= season_avg %>"
-                  data-last-14-avg="<%= summary.last_14_days_avg || 0 %>"
-                  data-games-7d="<%= games_played %>"
-                  data-games-14d="<%= summary.last_14_days_games || 0 %>"
+                  data-last-7-days-avg="<%= last_7_avg %>"
+                  data-trend-7-days="<%= trend %>"
+                  data-last-7-days-high="<%= summary.last_7_days_high || 0 %>"
+                  data-avg-score="<%= season_avg %>"
+                  data-last-14-days-avg="<%= summary.last_14_days_avg || 0 %>"
+                  data-last-7-days-games="<%= games_played %>"
+                  data-last-14-days-games="<%= summary.last_14_days_games || 0 %>"
                   data-trending-status="<%= trending_up ? 'up' : (trending_down ? 'down' : 'stable') %>"
                   onclick="window.location='<%= player_path(player) %>'">
 
@@ -339,3 +342,57 @@
     </div>
   </div>
 </div>
+
+<script>
+  // Update timestamp with relative time
+  function updateTimestamp() {
+    const element = document.getElementById('update-timestamp')
+    if (!element) return
+
+    const timestamp = element.dataset.timestamp
+    if (!timestamp) return
+
+    const now = new Date()
+    const then = new Date(timestamp)
+    const diffMs = now - then
+    const diffMins = Math.floor(diffMs / 60000)
+
+    let relativeTime
+    if (diffMins < 1) {
+      relativeTime = 'just now'
+    } else if (diffMins === 1) {
+      relativeTime = '1 minute ago'
+    } else if (diffMins < 60) {
+      relativeTime = `${diffMins} minutes ago`
+    } else {
+      const diffHours = Math.floor(diffMins / 60)
+      if (diffHours === 1) {
+        relativeTime = '1 hour ago'
+      } else if (diffHours < 24) {
+        relativeTime = `${diffHours} hours ago`
+      } else {
+        const diffDays = Math.floor(diffHours / 24)
+        if (diffDays === 1) {
+          relativeTime = '1 day ago'
+        } else {
+          relativeTime = `${diffDays} days ago`
+        }
+      }
+    }
+
+    // Show both absolute and relative time
+    const formattedDate = then.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    })
+    element.textContent = `${formattedDate} (${relativeTime})`
+  }
+
+  // Update on load and every minute
+  updateTimestamp()
+  setInterval(updateTimestamp, 60000)
+</script>
