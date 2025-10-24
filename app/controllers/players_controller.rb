@@ -27,44 +27,6 @@ class PlayersController < ApplicationController
     @percentiles = calculate_percentiles(@players)
   end
 
-  private
-
-  def calculate_percentiles(players)
-    percentiles = {}
-
-    # Already have player_summaries loaded via includes - don't query again
-    summaries = players.map(&:player_summary).compact
-
-    columns = {
-      'last_7_days_avg' => 'Last 7d Avg',
-      'trend_7_days' => 'Trend %',
-      'last_7_days_high' => 'Last 7d High',
-      'avg_score' => 'Season Avg',
-      'last_14_days_avg' => 'Last 14d Avg',
-      'last_7_days_games' => 'Games (7d)',
-      'last_14_days_games' => 'Games (14d)'
-    }
-
-    columns.each do |col, name|
-      # Use public_send instead of send for better security
-      values = summaries.map { |s| s.public_send(col) }
-                       .compact
-                       .sort
-
-      percentiles[col] = {
-        '0' => values.first || 0,
-        '25' => values[(values.length * 0.25).to_i] || 0,
-        '50' => values[(values.length * 0.50).to_i] || 0,
-        '75' => values[(values.length * 0.75).to_i] || 0,
-        '90' => values[(values.length * 0.90).to_i] || 0,
-        '95' => values[(values.length * 0.95).to_i] || 0,
-        '100' => values.last || 0
-      }
-    end
-
-    percentiles
-  end
-
   def show
     @player = Player.includes(:player_summary, :weekly_highs, :game_logs).find(params[:id])
     @weekly_highs = @player.weekly_highs.where(season: '2024-25').order(:week_number)
@@ -116,5 +78,43 @@ class PlayersController < ApplicationController
   def raw_data
     @player = Player.includes(:game_logs).find(params[:id])
     @game_logs = @player.game_logs.where(season: '2024-25').order(:game_date)
+  end
+
+  private
+
+  def calculate_percentiles(players)
+    percentiles = {}
+
+    # Already have player_summaries loaded via includes - don't query again
+    summaries = players.map(&:player_summary).compact
+
+    columns = {
+      'last_7_days_avg' => 'Last 7d Avg',
+      'trend_7_days' => 'Trend %',
+      'last_7_days_high' => 'Last 7d High',
+      'avg_score' => 'Season Avg',
+      'last_14_days_avg' => 'Last 14d Avg',
+      'last_7_days_games' => 'Games (7d)',
+      'last_14_days_games' => 'Games (14d)'
+    }
+
+    columns.each do |col, name|
+      # Use public_send instead of send for better security
+      values = summaries.map { |s| s.public_send(col) }
+                       .compact
+                       .sort
+
+      percentiles[col] = {
+        '0' => values.first || 0,
+        '25' => values[(values.length * 0.25).to_i] || 0,
+        '50' => values[(values.length * 0.50).to_i] || 0,
+        '75' => values[(values.length * 0.75).to_i] || 0,
+        '90' => values[(values.length * 0.90).to_i] || 0,
+        '95' => values[(values.length * 0.95).to_i] || 0,
+        '100' => values.last || 0
+      }
+    end
+
+    percentiles
   end
 end
