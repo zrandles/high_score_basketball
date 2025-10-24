@@ -14,7 +14,12 @@
 
   # Calculate points for the polyline
   points = scores.each_with_index.map do |score, i|
-    x = (i.to_f / (scores.length - 1)) * (width - padding * 2) + padding
+    # Handle single game case (avoid division by zero)
+    x = if scores.length == 1
+      width / 2.0
+    else
+      (i.to_f / (scores.length - 1)) * (width - padding * 2) + padding
+    end
     y = height - padding - ((score - min_score) / range.to_f * (height - padding * 2))
     "#{x.round(2)},#{y.round(2)}"
   end.join(' ')
@@ -63,7 +68,7 @@
 
     <!-- Points for each game with hover areas -->
     <% scores.each_with_index do |score, i| %>
-      <% x = (i.to_f / (scores.length - 1)) * (width - padding * 2) + padding %>
+      <% x = scores.length == 1 ? width / 2.0 : (i.to_f / (scores.length - 1)) * (width - padding * 2) + padding %>
       <% y = height - padding - ((score - min_score) / range.to_f * (height - padding * 2)) %>
       <% point_color = score > season_avg ? '#059669' : '#9ca3af' %>
 
