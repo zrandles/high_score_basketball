@@ -1,42 +1,48 @@
 import { Controller } from "@hotwired/stimulus"
 
 /**
- * Advanced Table Filter Controller for Golden Deployment Template
+ * Waiver Wire Filter Controller
  *
  * Features:
- * - 3-state column visibility (hidden → shown → featured)
- * - Dual-handle range sliders with percentile markers
- * - Filter mode (hide rows) vs Elimination mode (highlight failing cells)
- * - LocalStorage persistence
- * - Real-time row count display
- *
- * Adapted from bull_attributes app - the crown jewel of our filtering system.
- * This is production-tested code used for filtering 70+ columns of cattle data.
+ * - Search by player name
+ * - Filter by position, trending status, min games played
+ * - Sort by any column
+ * - Advanced filters with percentile sliders
  */
 export default class extends Controller {
   static targets = ["modal", "filterBar", "table", "tbody", "resultCount", "hiddenList", "shownList", "featuredList", "searchInput"]
-  static values = {
-    columns: Array,
-    percentiles: Object
-  }
 
   connect() {
-    console.log('Filter controller connected!')
-    this.searchTerm = ''
-    this.loadExamples()
-    this.loadPercentileValues()
-    this.initializeColumns()  // Initialize columns first
-    this.loadState()
-    this.buildTable()
-    this.renderModal()
-    this.renderFilterBar()
-    this.applyFilters()
+    console.log('Waiver Wire controller connected!')
+    try {
+      this.searchTerm = ''
+      this.sortColumn = null
+      this.sortDirection = 'desc'
+      console.log('Loading players...')
+      this.loadPlayers()
+      console.log('Loading percentiles...')
+      this.loadPercentiles()
+      console.log('Initializing columns...')
+      this.initializeColumns()
+      console.log('Loading state...')
+      this.loadState()
+      console.log('Applying filters...')
+      this.applyFilters()
+      console.log('Rendering filter bar...')
+      this.renderFilterBar()
+      console.log('Attaching sort listeners...')
+      this.attachSortListeners()
+      console.log('✅ Waiver Wire controller fully initialized!')
+      // Note: renderModal() is called lazily when modal is first opened
+    } catch (e) {
+      console.error('❌ Error in connect():', e)
+    }
   }
 
   /**
-   * Load player data from embedded JSON script tag
+   * Load player data from embedded JSON
    */
-  loadExamples() {
+  loadPlayers() {
     try {
       const dataScript = document.getElementById('players-data')
       if (!dataScript) {
@@ -45,8 +51,7 @@ export default class extends Controller {
         return
       }
 
-      const jsonText = dataScript.textContent.trim()
-      this.players = JSON.parse(jsonText)
+      this.players = JSON.parse(dataScript.textContent.trim())
       console.log(`✅ Loaded ${this.players.length} players`)
     } catch (e) {
       console.error('❌ Failed to parse players data:', e)
@@ -55,9 +60,9 @@ export default class extends Controller {
   }
 
   /**
-   * Load pre-calculated percentile values for slider markers
+   * Load percentile values for sliders
    */
-  loadPercentileValues() {
+  loadPercentiles() {
     try {
       const dataScript = document.getElementById('percentile-values')
       if (!dataScript) {
@@ -75,35 +80,53 @@ export default class extends Controller {
   }
 
   /**
-   * Load saved filter state from localStorage
+   * Initialize column definitions
+   */
+  initializeColumns() {
+    this.allColumns = [
+      { key: 'name', name: 'Player', filterable: false },
+      { key: 'position', name: 'Position', filterable: false },
+      { key: 'team', name: 'Team', filterable: false },
+      { key: 'last_7_days_avg', name: 'Last 7d Avg', filterable: true },
+      { key: 'trend_7_days', name: 'Trend %', filterable: true },
+      { key: 'last_7_days_high', name: '7d High', filterable: true },
+      { key: 'last_7_days_games', name: 'GP (7d)', filterable: true },
+      { key: 'avg_score', name: 'Season Avg', filterable: true },
+      { key: 'last_14_days_avg', name: '14d Avg', filterable: true },
+      { key: 'last_14_days_games', name: 'GP (14d)', filterable: true }
+    ]
+
+    // Get all table rows
+    this.allRows = Array.from(this.tbodyTarget.querySelectorAll('tr'))
+  }
+
+  /**
+   * Load saved state from localStorage
    */
   loadState() {
-    const saved = localStorage.getItem('exampleFilterState')
+    const saved = localStorage.getItem('waiverWireFilterState')
     if (saved) {
-      console.log('Loading saved state from localStorage')
       const state = JSON.parse(saved)
       this.hiddenColumns = state.hidden || []
       this.shownColumns = state.shown || []
       this.featuredColumns = state.featured || {}
 
-      // Ensure all featured columns have a mode (default to 'filter')
+      // Ensure all featured columns have a mode
       Object.keys(this.featuredColumns).forEach(key => {
         if (!this.featuredColumns[key].mode) {
           this.featuredColumns[key].mode = 'filter'
         }
       })
     } else {
-      console.log('Using default state (no saved state)')
-      // Default state: ALL columns shown, none hidden
+      // Default: all columns shown
       this.shownColumns = this.allColumns.map(col => col.key)
       this.hiddenColumns = []
       this.featuredColumns = {}
     }
-    console.log(`State loaded: ${this.shownColumns.length} shown, ${this.hiddenColumns.length} hidden, ${Object.keys(this.featuredColumns).length} featured`)
   }
 
   /**
-   * Save current filter state to localStorage
+   * Save state to localStorage
    */
   saveState() {
     const state = {
@@ -111,219 +134,163 @@ export default class extends Controller {
       shown: this.shownColumns,
       featured: this.featuredColumns
     }
-    localStorage.setItem('exampleFilterState', JSON.stringify(state))
+    localStorage.setItem('waiverWireFilterState', JSON.stringify(state))
   }
 
   /**
-   * Define all available columns
-   * Customize this for your app's data structure
+   * Handle search input
    */
-  initializeColumns() {
-    this.allColumns = [
-      // Identifiers
-      { key: 'name', name: 'Name', category: 'Identifiers', filterable: false },
-      { key: 'category', name: 'Category', category: 'Identifiers', filterable: false },
-      { key: 'status', name: 'Status', category: 'Identifiers', filterable: false },
-
-      // Metrics
-      { key: 'priority', name: 'Priority', category: 'Metrics', filterable: true },
-      { key: 'score', name: 'Score', category: 'Metrics', filterable: true },
-      { key: 'complexity', name: 'Complexity', category: 'Metrics', filterable: true },
-      { key: 'speed', name: 'Speed', category: 'Metrics', filterable: true },
-      { key: 'quality', name: 'Quality', category: 'Metrics', filterable: true },
-      { key: 'average_metrics', name: 'Avg Metrics', category: 'Metrics', filterable: true }
-    ]
-
-    // Store original rows (will be replaced by buildTable)
-    this.allRows = []
+  handleSearch(event) {
+    this.searchTerm = event.target.value.toLowerCase().trim()
+    this.applyFilters()
   }
 
   /**
-   * Build table HTML from scratch with visible columns
+   * Apply all filters
    */
-  buildTable() {
-    // Get visible columns (shown + featured)
-    const visibleColumns = this.allColumns.filter(c =>
-      this.shownColumns.includes(c.key) || this.featuredColumns[c.key]
-    )
+  applyFilters() {
+    const featuredCols = Object.keys(this.featuredColumns)
 
-    console.log(`Building table with ${visibleColumns.length} visible columns and ${this.players.length} players`)
+    // No filters - show all
+    if (featuredCols.length === 0 && !this.searchTerm) {
+      this.allRows.forEach(row => {
+        row.style.display = ''
+      })
+      this.updateResultCount(this.allRows.length)
+      return
+    }
 
-    // Pre-calculate percentiles for all filterable columns for highlighting
-    this.columnPercentiles = this.calculateAllPercentiles()
+    // Calculate percentiles for featured columns
+    const percentiles = this.calculatePercentiles(featuredCols)
+    let visibleCount = 0
 
-    // Build table headers
-    const thead = this.tableTarget.querySelector('thead')
-    thead.innerHTML = this.buildTableHeaders(visibleColumns)
+    this.allRows.forEach(row => {
+      // Search filter
+      if (this.searchTerm) {
+        const playerName = row.dataset.playerName || ''
+        if (!playerName.includes(this.searchTerm)) {
+          row.style.display = 'none'
+          return
+        }
+      }
 
-    // Build table rows
-    const tbody = this.tbodyTarget
-    tbody.innerHTML = this.players.map(example => this.buildTableRow(example, visibleColumns)).join('')
+      // Percentile filters
+      let passesFilters = true
+      for (const colKey of featuredCols) {
+        const filter = this.featuredColumns[colKey]
+        const value = parseFloat(row.dataset[this.camelCase(colKey)])
 
-    // Store rows for filtering
-    this.allRows = Array.from(tbody.querySelectorAll('tr'))
-    console.log(`✅ Table built: ${this.allRows.length} rows`)
+        if (isNaN(value)) {
+          passesFilters = false
+          break
+        }
+
+        const percentile = this.getPercentile(value, percentiles[colKey])
+        if (percentile < filter.min || percentile > filter.max) {
+          passesFilters = false
+          break
+        }
+      }
+
+      if (passesFilters) {
+        row.style.display = ''
+        visibleCount++
+      } else {
+        row.style.display = 'none'
+      }
+    })
+
+    this.updateResultCount(visibleCount)
   }
 
   /**
-   * Calculate percentiles for all filterable columns (for cell highlighting)
+   * Convert snake_case to camelCase for dataset attributes
    */
-  calculateAllPercentiles() {
+  camelCase(str) {
+    return str.replace(/_([a-z])/g, (g) => g[1].toUpperCase())
+  }
+
+  /**
+   * Calculate percentiles for columns
+   */
+  calculatePercentiles(columns) {
     const percentiles = {}
 
-    this.allColumns.filter(c => c.filterable).forEach(col => {
+    columns.forEach(colKey => {
       const values = []
 
-      this.players.forEach(example => {
-        const value = example[col.key]
-        if (value !== null && value !== undefined && value !== '' && !isNaN(parseFloat(value))) {
-          values.push(parseFloat(value))
+      this.allRows.forEach(row => {
+        const value = parseFloat(row.dataset[this.camelCase(colKey)])
+        if (!isNaN(value)) {
+          values.push(value)
         }
       })
 
       values.sort((a, b) => a - b)
-      percentiles[col.key] = values
+      percentiles[colKey] = values
     })
 
     return percentiles
   }
 
   /**
-   * Build table header rows
+   * Get percentile rank for a value
    */
-  buildTableHeaders(columns) {
-    // Group columns by category for header rows
-    const categories = {}
-    columns.forEach(col => {
-      if (!categories[col.category]) {
-        categories[col.category] = []
-      }
-      categories[col.category].push(col)
-    })
+  getPercentile(value, sortedValues) {
+    if (sortedValues.length === 0) return 0
 
-    // Build category header row
-    const categoryKeys = Object.keys(categories)
-    let categoryRow = ''
-    if (categoryKeys.length > 1) {
-      categoryRow = '<tr>'
-      Object.entries(categories).forEach(([category, cols]) => {
-        if (category === 'Identifiers') {
-          // Identifiers span 2 rows
-          cols.forEach((col, idx) => {
-            const colIndex = columns.indexOf(col)
-            categoryRow += `<th rowspan="2" class="sortable cursor-pointer hover:bg-gray-100" onclick="window.sortTable(${colIndex})">${col.name}</th>`
-          })
-        } else {
-          categoryRow += `<th colspan="${cols.length}" class="column-group bg-gray-50 font-bold text-gray-700">${category}</th>`
-        }
-      })
-      categoryRow += '</tr>'
+    let count = 0
+    for (const v of sortedValues) {
+      if (v <= value) count++
+      else break
     }
 
-    // Build column header row (non-identifier columns only)
-    let columnRow = '<tr>'
-    columns.forEach((col, index) => {
-      if (col.category !== 'Identifiers') {
-        columnRow += `<th class="sortable center cursor-pointer hover:bg-gray-100" onclick="window.sortTable(${index})">${col.name}</th>`
-      }
-    })
-    columnRow += '</tr>'
-
-    return categoryKeys.length > 1
-      ? categoryRow + columnRow
-      : `<tr>${columns.map((col, i) => `<th class="sortable cursor-pointer hover:bg-gray-100" onclick="window.sortTable(${i})">${col.name}</th>`).join('')}</tr>`
+    return Math.round((count / sortedValues.length) * 100)
   }
 
   /**
-   * Build a single table row
+   * Update result count
    */
-  buildTableRow(example, columns) {
-    const cells = columns.map(col => {
-      const value = example[col.key]
-      return this.buildTableCell(col.key, value, example)
-    }).join('')
-
-    return `<tr data-example-id="${example.id}">${cells}</tr>`
+  updateResultCount(count) {
+    if (this.hasResultCountTarget) {
+      this.resultCountTarget.textContent = `Showing ${count} of ${this.allRows.length} players`
+    }
   }
 
   /**
-   * Build a single table cell with appropriate formatting
-   */
-  buildTableCell(columnKey, value, example) {
-    // Name column - link to show page
-    if (columnKey === 'name') {
-      return `<td class="font-medium text-blue-600">${value || '-'}</td>`
-    }
-
-    // Category column
-    if (columnKey === 'category') {
-      const badges = {
-        'ui_pattern': '<span class="px-2 py-1 text-xs rounded bg-purple-100 text-purple-700">UI</span>',
-        'backend_pattern': '<span class="px-2 py-1 text-xs rounded bg-green-100 text-green-700">Backend</span>',
-        'data_pattern': '<span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-700">Data</span>',
-        'deployment_pattern': '<span class="px-2 py-1 text-xs rounded bg-orange-100 text-orange-700">Deploy</span>'
-      }
-      return `<td class="text-center">${badges[value] || value || '-'}</td>`
-    }
-
-    // Status column
-    if (columnKey === 'status') {
-      const badges = {
-        'new': '<span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-700">New</span>',
-        'in_progress': '<span class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-700">In Progress</span>',
-        'completed': '<span class="px-2 py-1 text-xs rounded bg-green-100 text-green-700">Completed</span>',
-        'archived': '<span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">Archived</span>'
-      }
-      return `<td class="text-center">${badges[value] || value || '-'}</td>`
-    }
-
-    // Numeric columns
-    if (value === null || value === undefined || value === '') {
-      return `<td class="number text-center text-gray-400">-</td>`
-    }
-
-    // Format numeric value
-    let formatted = value
-    if (typeof value === 'number') {
-      formatted = value.toFixed(1)
-    }
-
-    // Percentile highlighting (top performers)
-    let percentileClass = ''
-    if (this.columnPercentiles && this.columnPercentiles[columnKey]) {
-      const percentile = this.getPercentile(parseFloat(value), this.columnPercentiles[columnKey])
-      if (percentile >= 95) {
-        percentileClass = 'bg-green-100 font-bold'
-      } else if (percentile >= 90) {
-        percentileClass = 'bg-green-50'
-      } else if (percentile >= 75) {
-        percentileClass = 'bg-yellow-50'
-      }
-    }
-
-    return `<td class="number text-center ${percentileClass}">${formatted}</td>`
-  }
-
-  /**
-   * Render the column configuration modal
+   * Render modal
    */
   renderModal() {
-    const hiddenCols = this.allColumns.filter(c => this.hiddenColumns.includes(c.key))
-    const shownCols = this.allColumns.filter(c => this.shownColumns.includes(c.key) && !this.featuredColumns[c.key])
-    const featuredCols = this.allColumns.filter(c => this.featuredColumns[c.key])
+    try {
+      const hiddenCols = this.allColumns.filter(c => this.hiddenColumns.includes(c.key))
+      const shownCols = this.allColumns.filter(c => this.shownColumns.includes(c.key) && !this.featuredColumns[c.key])
+      const featuredCols = this.allColumns.filter(c => this.featuredColumns[c.key])
 
-    this.hiddenListTarget.innerHTML = this.renderColumnList(hiddenCols, 'hidden')
-    this.shownListTarget.innerHTML = this.renderColumnList(shownCols, 'shown')
-    this.featuredListTarget.innerHTML = this.renderColumnList(featuredCols, 'featured')
+      // Check if targets exist before accessing them
+      if (this.hasHiddenListTarget) {
+        this.hiddenListTarget.innerHTML = this.renderColumnList(hiddenCols, 'hidden')
+      }
+      if (this.hasShownListTarget) {
+        this.shownListTarget.innerHTML = this.renderColumnList(shownCols, 'shown')
+      }
+      if (this.hasFeaturedListTarget) {
+        this.featuredListTarget.innerHTML = this.renderColumnList(featuredCols, 'featured')
+      }
 
-    // Update counts
-    document.getElementById('hidden-count').textContent = hiddenCols.length
-    document.getElementById('shown-count').textContent = shownCols.length
-    document.getElementById('featured-count').textContent = featuredCols.length
+      const hiddenCount = document.getElementById('hidden-count')
+      const shownCount = document.getElementById('shown-count')
+      const featuredCount = document.getElementById('featured-count')
+
+      if (hiddenCount) hiddenCount.textContent = hiddenCols.length
+      if (shownCount) shownCount.textContent = shownCols.length
+      if (featuredCount) featuredCount.textContent = featuredCols.length
+    } catch (e) {
+      console.error('❌ Error in renderModal:', e)
+    }
   }
 
   /**
-   * Render a list of columns for the modal
+   * Render column list for modal
    */
   renderColumnList(columns, state) {
     if (columns.length === 0) {
@@ -334,16 +301,16 @@ export default class extends Controller {
       let buttons = ''
 
       if (state === 'hidden') {
-        buttons = `<span class="text-gray-400 hover:text-gray-600 cursor-pointer" data-action="click->filter#moveToShown" data-column="${col.key}">→</span>`
+        buttons = `<span class="text-gray-400 hover:text-gray-600 cursor-pointer" data-action="click->waiver-wire#moveToShown" data-column="${col.key}">→</span>`
       } else if (state === 'shown') {
         buttons = `
           <div class="flex gap-2">
-            <span class="text-gray-400 hover:text-gray-600 cursor-pointer" data-action="click->filter#moveToHidden" data-column="${col.key}" title="Hide column">←</span>
-            ${col.filterable ? `<span class="text-gray-400 hover:text-blue-600 cursor-pointer" data-action="click->filter#moveToFeatured" data-column="${col.key}" title="Add filter">★</span>` : ''}
+            <span class="text-gray-400 hover:text-gray-600 cursor-pointer" data-action="click->waiver-wire#moveToHidden" data-column="${col.key}" title="Hide column">←</span>
+            ${col.filterable ? `<span class="text-gray-400 hover:text-blue-600 cursor-pointer" data-action="click->waiver-wire#moveToFeatured" data-column="${col.key}" title="Add filter">★</span>` : ''}
           </div>
         `
       } else {
-        buttons = `<span class="text-gray-400 hover:text-red-600 cursor-pointer" data-action="click->filter#moveToShown" data-column="${col.key}" title="Remove filter">✕</span>`
+        buttons = `<span class="text-gray-400 hover:text-red-600 cursor-pointer" data-action="click->waiver-wire#moveToShown" data-column="${col.key}" title="Remove filter">✕</span>`
       }
 
       return `
@@ -356,7 +323,7 @@ export default class extends Controller {
   }
 
   /**
-   * Render the filter bar with active sliders
+   * Render filter bar with sliders
    */
   renderFilterBar() {
     const featuredCols = Object.keys(this.featuredColumns)
@@ -369,22 +336,17 @@ export default class extends Controller {
     this.filterBarTarget.classList.remove('hidden')
 
     const html = `
-      <div class="bg-gray-50 border-b border-gray-200 p-4 mb-4">
+      <div class="bg-gray-50 border-b border-gray-200 p-4 mb-4 rounded-lg">
         <div class="flex justify-between items-center mb-3">
           <h3 class="text-sm font-semibold text-gray-700">
             Active Filters (${featuredCols.length})
           </h3>
           <div class="flex gap-2">
-            <button data-action="click->filter#toggleFilters"
-                    data-filter-target="toggleButton"
-                    class="text-sm text-gray-600 hover:text-gray-800">Hide</button>
-            <button data-action="click->filter#clearAllFilters"
+            <button data-action="click->waiver-wire#clearAllFilters"
                     class="text-sm text-blue-600 hover:text-blue-800">Clear All</button>
-            <button data-action="click->filter#openModal"
-                    class="text-sm text-gray-600 hover:text-gray-800">⚙️ Configure</button>
           </div>
         </div>
-        <div class="space-y-3" data-filter-target="filtersContent">
+        <div class="space-y-3">
           ${featuredCols.map(key => this.renderSlider(key)).join('')}
         </div>
       </div>
@@ -394,27 +356,7 @@ export default class extends Controller {
   }
 
   /**
-   * Toggle filter bar visibility
-   */
-  toggleFilters() {
-    const content = this.filterBarTarget.querySelector('[data-filter-target="filtersContent"]')
-    const toggleButton = this.filterBarTarget.querySelector('[data-filter-target="toggleButton"]')
-
-    if (!content || !toggleButton) return
-
-    const isHidden = content.style.display === 'none'
-
-    if (isHidden) {
-      content.style.display = ''
-      toggleButton.textContent = 'Hide'
-    } else {
-      content.style.display = 'none'
-      toggleButton.textContent = 'Show'
-    }
-  }
-
-  /**
-   * Render a dual-handle slider for a column
+   * Render a slider for a column
    */
   renderSlider(columnKey) {
     const column = this.allColumns.find(c => c.key === columnKey)
@@ -425,54 +367,43 @@ export default class extends Controller {
       ? `${filter.min}th-${filter.max}th percentile (${valueRange})`
       : `${filter.min}th-${filter.max}th percentile`
 
-    const mode = filter.mode || 'filter'
-    const modeButtonText = mode === 'filter' ? 'Filter' : 'Elimination'
-    const modeButtonClass = mode === 'filter' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'
-
     return `
-      <div class="slider-container">
-        <div class="slider-header">
-          <span class="slider-label">${column.name}</span>
-          <button data-action="click->filter#toggleMode"
-                  data-column="${columnKey}"
-                  class="text-xs px-2 py-1 rounded ${modeButtonClass}"
-                  style="font-size: 11px; margin-left: 8px;">
-            ${modeButtonText}
-          </button>
-          <span class="slider-range" data-percentile-label="${columnKey}" style="flex: 1; text-align: center;">
-            ${labelText}
-          </span>
-          <button data-action="click->filter#removeFilter"
-                  data-column="${columnKey}"
-                  class="slider-remove">✕</button>
+      <div class="flex items-center gap-4 bg-white p-3 rounded-lg border border-gray-200">
+        <div class="flex-shrink-0 w-32">
+          <span class="text-sm font-medium text-gray-700">${column.name}</span>
         </div>
-        <div class="dual-slider">
-          <input type="range"
-                 min="0" max="100"
-                 value="${filter.min}"
-                 data-column="${columnKey}"
-                 data-handle="min"
-                 data-action="input->filter#updateSlider"
-                 class="slider-min">
-          <input type="range"
-                 min="0" max="100"
-                 value="${filter.max}"
-                 data-column="${columnKey}"
-                 data-handle="max"
-                 data-action="input->filter#updateSlider"
-                 class="slider-max">
-          <div class="slider-track">
-            <div class="slider-range-fill"
-                 data-range-fill="${columnKey}"
-                 style="left: ${filter.min}%; width: ${filter.max - filter.min}%;"></div>
+        <div class="flex-grow">
+          <div class="relative h-6">
+            <input type="range"
+                   min="0" max="100"
+                   value="${filter.min}"
+                   data-column="${columnKey}"
+                   data-handle="min"
+                   data-action="input->waiver-wire#updateSlider"
+                   class="absolute w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                   style="pointer-events: auto;">
+            <input type="range"
+                   min="0" max="100"
+                   value="${filter.max}"
+                   data-column="${columnKey}"
+                   data-handle="max"
+                   data-action="input->waiver-wire#updateSlider"
+                   class="absolute w-full h-2 bg-transparent rounded-lg appearance-none cursor-pointer"
+                   style="pointer-events: auto;">
+          </div>
+          <div class="text-xs text-center text-gray-600 mt-1" data-percentile-label="${columnKey}">
+            ${labelText}
           </div>
         </div>
+        <button data-action="click->waiver-wire#removeFilter"
+                data-column="${columnKey}"
+                class="flex-shrink-0 text-gray-400 hover:text-red-600 text-lg">✕</button>
       </div>
     `
   }
 
   /**
-   * Update slider values and reapply filters
+   * Update slider values
    */
   updateSlider(event) {
     const column = event.target.dataset.column
@@ -492,13 +423,12 @@ export default class extends Controller {
     }
 
     this.updatePercentileLabel(column)
-    this.updateRangeFill(column)
     this.saveState()
     this.applyFilters()
   }
 
   /**
-   * Update the percentile label with value range
+   * Update percentile label
    */
   updatePercentileLabel(column) {
     const label = this.filterBarTarget.querySelector(`[data-percentile-label="${column}"]`)
@@ -515,7 +445,7 @@ export default class extends Controller {
   }
 
   /**
-   * Get value range for a percentile range
+   * Get value range for percentile range
    */
   getValueRangeForPercentile(column, minPercentile, maxPercentile) {
     const columnData = this.percentileValues[column]
@@ -530,220 +460,56 @@ export default class extends Controller {
   }
 
   /**
-   * Interpolate value at a specific percentile
+   * Interpolate value at percentile
    */
   interpolateValue(columnData, percentile) {
-    const lowerP = Math.floor(percentile / 5) * 5
-    const upperP = Math.ceil(percentile / 5) * 5
-
-    if (lowerP === upperP) {
-      return columnData[lowerP] || null
+    // Check if we have exact percentile
+    if (columnData[percentile.toString()]) {
+      return parseFloat(columnData[percentile.toString()])
     }
 
-    const lowerV = columnData[lowerP]
-    const upperV = columnData[upperP]
+    // Find bounding percentiles
+    const percentiles = Object.keys(columnData).map(Number).sort((a, b) => a - b)
+    let lower = 0
+    let upper = 100
 
-    if (lowerV === undefined || upperV === undefined) return null
+    for (let i = 0; i < percentiles.length - 1; i++) {
+      if (percentiles[i] <= percentile && percentile <= percentiles[i + 1]) {
+        lower = percentiles[i]
+        upper = percentiles[i + 1]
+        break
+      }
+    }
 
-    const fraction = (percentile - lowerP) / (upperP - lowerP)
+    const lowerV = parseFloat(columnData[lower.toString()])
+    const upperV = parseFloat(columnData[upper.toString()])
+
+    if (isNaN(lowerV) || isNaN(upperV)) return null
+
+    const fraction = (percentile - lower) / (upper - lower)
     return lowerV + fraction * (upperV - lowerV)
   }
 
-  /**
-   * Update the visual range fill for a slider
-   */
-  updateRangeFill(column) {
-    const fill = this.filterBarTarget.querySelector(`[data-range-fill="${column}"]`)
-    if (fill) {
-      const filter = this.featuredColumns[column]
-      fill.style.left = `${filter.min}%`
-      fill.style.width = `${filter.max - filter.min}%`
-    }
-  }
-
-  /**
-   * Handle search input
-   */
-  handleSearch(event) {
-    this.searchTerm = event.target.value.toLowerCase().trim()
-    this.applyFilters()
-  }
-
-  /**
-   * Apply all active filters to table rows
-   *
-   * Three-pass system:
-   * 0. Search: Hide rows that don't match search term
-   * 1. Filter mode: Hide rows that don't match
-   * 2. Elimination mode: Highlight failing cells in visible rows
-   */
-  applyFilters() {
-    const featuredCols = Object.keys(this.featuredColumns)
-
-    // Check if we have no filters or search
-    if (featuredCols.length === 0 && !this.searchTerm) {
-      // Show all rows, remove all highlighting
-      this.allRows.forEach(row => {
-        row.style.display = ''
-        row.classList.remove('eliminated-row')
-        Array.from(row.cells).forEach(cell => cell.classList.remove('elimination-fail'))
-      })
-      this.updateResultCount(this.allRows.length)
-      return
-    }
-
-    // Separate filter and elimination columns
-    const filterCols = featuredCols.filter(key => {
-      const mode = this.featuredColumns[key].mode || 'filter'
-      return mode === 'filter'
-    })
-    const eliminationCols = featuredCols.filter(key => {
-      const mode = this.featuredColumns[key].mode || 'filter'
-      return mode === 'elimination'
-    })
-
-    // Calculate percentiles for all featured columns
-    const percentiles = this.calculatePercentiles(featuredCols)
-
-    let visibleCount = 0
-
-    this.allRows.forEach(row => {
-      // Clear previous elimination highlighting
-      row.classList.remove('eliminated-row')
-      Array.from(row.cells).forEach(cell => cell.classList.remove('elimination-fail'))
-
-      // PASS 0: Check search term (if present)
-      if (this.searchTerm) {
-        const rowText = Array.from(row.cells).map(cell => cell.textContent.toLowerCase()).join(' ')
-        if (!rowText.includes(this.searchTerm)) {
-          row.style.display = 'none'
-          return
-        }
-      }
-
-      // FIRST PASS: Check filter-mode columns (hide if fails)
-      let passesFilters = true
-      for (const colKey of filterCols) {
-        const filter = this.featuredColumns[colKey]
-        const cellIndex = this.getColumnIndex(colKey)
-        const cell = row.cells[cellIndex]
-        const value = parseFloat(cell.textContent.trim())
-
-        if (isNaN(value)) {
-          passesFilters = false
-          break
-        }
-
-        const percentile = this.getPercentile(value, percentiles[colKey])
-        if (percentile < filter.min || percentile > filter.max) {
-          passesFilters = false
-          break
-        }
-      }
-
-      if (!passesFilters) {
-        row.style.display = 'none'
-        return
-      }
-
-      // Row passes filters, so it's visible
-      row.style.display = ''
-      visibleCount++
-
-      // SECOND PASS: Check elimination-mode columns (highlight if fails)
-      let failedElimination = false
-      for (const colKey of eliminationCols) {
-        const filter = this.featuredColumns[colKey]
-        const cellIndex = this.getColumnIndex(colKey)
-        const cell = row.cells[cellIndex]
-        const value = parseFloat(cell.textContent.trim())
-
-        if (isNaN(value)) continue
-
-        const percentile = this.getPercentile(value, percentiles[colKey])
-        if (percentile < filter.min || percentile > filter.max) {
-          failedElimination = true
-          cell.classList.add('elimination-fail')
-        }
-      }
-
-      if (failedElimination) {
-        row.classList.add('eliminated-row')
-      }
-    })
-
-    this.updateResultCount(visibleCount)
-  }
-
-  /**
-   * Calculate percentiles for specified columns
-   */
-  calculatePercentiles(columns) {
-    const percentiles = {}
-
-    columns.forEach(colKey => {
-      const values = []
-      const cellIndex = this.getColumnIndex(colKey)
-
-      this.allRows.forEach(row => {
-        const cell = row.cells[cellIndex]
-        const value = parseFloat(cell.textContent.trim())
-        if (!isNaN(value)) {
-          values.push(value)
-        }
-      })
-
-      values.sort((a, b) => a - b)
-      percentiles[colKey] = values
-    })
-
-    return percentiles
-  }
-
-  /**
-   * Get percentile rank for a value in a sorted array
-   */
-  getPercentile(value, sortedValues) {
-    if (sortedValues.length === 0) return 0
-
-    let count = 0
-    for (const v of sortedValues) {
-      if (v <= value) count++
-      else break
-    }
-
-    return Math.round((count / sortedValues.length) * 100)
-  }
-
-  /**
-   * Get the index of a column in the currently visible columns
-   */
-  getColumnIndex(columnKey) {
-    const visibleColumns = this.allColumns.filter(c =>
-      this.shownColumns.includes(c.key) || this.featuredColumns[c.key]
-    )
-
-    const index = visibleColumns.findIndex(c => c.key === columnKey)
-    return index >= 0 ? index : 0
-  }
-
-  /**
-   * Update the result count display
-   */
-  updateResultCount(count) {
-    if (this.hasResultCountTarget) {
-      this.resultCountTarget.textContent = `Showing ${count} of ${this.allRows.length} players`
-    }
-  }
-
-  // ========== Modal Actions ==========
-
+  // Modal actions
   openModal() {
-    this.modalTarget.classList.remove('hidden')
+    console.log('openModal() called')
+    try {
+      // Render modal content before showing it
+      this.renderModal()
+      this.modalTarget.classList.remove('hidden')
+      console.log('Modal opened successfully')
+    } catch (e) {
+      console.error('❌ Error opening modal:', e)
+    }
   }
 
   closeModal() {
+    console.log('closeModal() called')
     this.modalTarget.classList.add('hidden')
+  }
+
+  stopPropagation(event) {
+    event.stopPropagation()
   }
 
   moveToShown(event) {
@@ -764,15 +530,6 @@ export default class extends Controller {
     this.saveState()
     this.renderModal()
     this.renderFilterBar()
-  }
-
-  toggleMode(event) {
-    const column = event.currentTarget.dataset.column
-    const currentMode = this.featuredColumns[column].mode || 'filter'
-    this.featuredColumns[column].mode = currentMode === 'filter' ? 'elimination' : 'filter'
-    this.saveState()
-    this.renderFilterBar()
-    this.applyFilters()
   }
 
   moveToHidden(event) {
@@ -813,58 +570,115 @@ export default class extends Controller {
 
   saveConfiguration() {
     this.saveState()
-    this.buildTable()
-    this.renderFilterBar()
     this.applyFilters()
     this.closeModal()
   }
 
   resetConfiguration() {
-    if (confirm('Reset all column and filter settings to defaults?')) {
-      localStorage.removeItem('exampleFilterState')
+    if (confirm('Reset all filter settings to defaults?')) {
+      localStorage.removeItem('waiverWireFilterState')
       location.reload()
     }
   }
-}
 
-/**
- * Global sortTable function for table header clicks
- * Sorts visible rows by column index
- */
-window.sortTable = function(columnIndex) {
-  const table = document.querySelector('[data-filter-target="table"]')
-  const tbody = table.querySelector('tbody')
-  const rows = Array.from(tbody.querySelectorAll('tr[style=""]'))  // Only visible rows
+  /**
+   * Attach sort listeners to column headers
+   */
+  attachSortListeners() {
+    try {
+      const headers = this.tableTarget.querySelectorAll('th[data-column]')
+      console.log(`Found ${headers.length} sortable headers`)
+      headers.forEach(header => {
+        header.style.cursor = 'pointer'
+        header.addEventListener('click', (e) => {
+          console.log('Sort clicked:', e.currentTarget.dataset.column)
+          this.handleSort(e.currentTarget.dataset.column)
+        })
+      })
+    } catch (e) {
+      console.error('❌ Error in attachSortListeners:', e)
+    }
+  }
 
-  // Get current sort direction from header
-  const headers = table.querySelectorAll('th')
-  const header = headers[columnIndex]
-  const currentSort = header.dataset.sort || ''
-  const newSort = currentSort === 'asc' ? 'desc' : 'asc'
-
-  // Clear all header sorts
-  headers.forEach(th => th.dataset.sort = '')
-  header.dataset.sort = newSort
-
-  // Sort rows
-  rows.sort((a, b) => {
-    let aVal = a.cells[columnIndex].textContent.trim()
-    let bVal = b.cells[columnIndex].textContent.trim()
-
-    // Try numeric sort first
-    const aNum = parseFloat(aVal)
-    const bNum = parseFloat(bVal)
-
-    if (!isNaN(aNum) && !isNaN(bNum)) {
-      return newSort === 'asc' ? aNum - bNum : bNum - aNum
+  /**
+   * Handle column sorting
+   */
+  handleSort(column) {
+    // Toggle direction if clicking same column, otherwise default to descending
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'desc' ? 'asc' : 'desc'
+    } else {
+      this.sortColumn = column
+      this.sortDirection = 'desc'
     }
 
-    // Fall back to text sort
-    return newSort === 'asc'
-      ? aVal.localeCompare(bVal)
-      : bVal.localeCompare(aVal)
-  })
+    this.sortRows()
+    this.updateSortIndicators()
+  }
 
-  // Reattach sorted rows
-  rows.forEach(row => tbody.appendChild(row))
+  /**
+   * Sort rows by current column and direction
+   */
+  sortRows() {
+    if (!this.sortColumn) return
+
+    const dataAttr = this.camelCase(this.sortColumn)
+
+    // Sort allRows array
+    this.allRows.sort((a, b) => {
+      let aVal, bVal
+
+      if (this.sortColumn === 'name') {
+        aVal = a.dataset.playerName || ''
+        bVal = b.dataset.playerName || ''
+        const comparison = aVal.localeCompare(bVal)
+        return this.sortDirection === 'asc' ? comparison : -comparison
+      } else if (this.sortColumn === 'position' || this.sortColumn === 'team') {
+        aVal = a.dataset[this.sortColumn] || ''
+        bVal = b.dataset[this.sortColumn] || ''
+        const comparison = aVal.localeCompare(bVal)
+        return this.sortDirection === 'asc' ? comparison : -comparison
+      } else {
+        // Numeric columns (including hot-score which is already calculated in data attribute)
+        aVal = parseFloat(a.dataset[dataAttr])
+        bVal = parseFloat(b.dataset[dataAttr])
+
+        // Handle NaN values (put them at the end)
+        if (isNaN(aVal) && isNaN(bVal)) return 0
+        if (isNaN(aVal)) return 1
+        if (isNaN(bVal)) return -1
+
+        return this.sortDirection === 'desc' ? bVal - aVal : aVal - bVal
+      }
+    })
+
+    // Reorder DOM elements
+    this.allRows.forEach(row => {
+      this.tbodyTarget.appendChild(row)
+    })
+  }
+
+  /**
+   * Update sort direction indicators in headers
+   */
+  updateSortIndicators() {
+    // Remove all existing indicators
+    this.tableTarget.querySelectorAll('th[data-column]').forEach(header => {
+      const existing = header.querySelector('.sort-indicator')
+      if (existing) existing.remove()
+      header.classList.remove('bg-blue-100')
+    })
+
+    // Add indicator to sorted column
+    if (this.sortColumn) {
+      const header = this.tableTarget.querySelector(`th[data-column="${this.sortColumn}"]`)
+      if (header) {
+        header.classList.add('bg-blue-100')
+        const indicator = document.createElement('span')
+        indicator.className = 'sort-indicator ml-1 text-blue-600 font-bold'
+        indicator.textContent = this.sortDirection === 'desc' ? '▼' : '▲'
+        header.appendChild(indicator)
+      }
+    }
+  }
 }
