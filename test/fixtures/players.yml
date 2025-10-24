@@ -4,12 +4,12 @@ one:
   name: MyString
   team: MyString
   position: MyString
-  nba_id: MyString
+  nba_id: fixture_player_one
   ppg_2023_24: 9.99
 
 two:
-  name: MyString
-  team: MyString
-  position: MyString
-  nba_id: MyString
+  name: MyString2
+  team: MyString2
+  position: MyString2
+  nba_id: fixture_player_two
   ppg_2023_24: 9.99
