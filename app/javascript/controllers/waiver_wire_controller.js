@@ -261,17 +261,32 @@ export default class extends Controller {
    * Render modal
    */
   renderModal() {
-    const hiddenCols = this.allColumns.filter(c => this.hiddenColumns.includes(c.key))
-    const shownCols = this.allColumns.filter(c => this.shownColumns.includes(c.key) && !this.featuredColumns[c.key])
-    const featuredCols = this.allColumns.filter(c => this.featuredColumns[c.key])
+    try {
+      const hiddenCols = this.allColumns.filter(c => this.hiddenColumns.includes(c.key))
+      const shownCols = this.allColumns.filter(c => this.shownColumns.includes(c.key) && !this.featuredColumns[c.key])
+      const featuredCols = this.allColumns.filter(c => this.featuredColumns[c.key])
 
-    this.hiddenListTarget.innerHTML = this.renderColumnList(hiddenCols, 'hidden')
-    this.shownListTarget.innerHTML = this.renderColumnList(shownCols, 'shown')
-    this.featuredListTarget.innerHTML = this.renderColumnList(featuredCols, 'featured')
+      // Check if targets exist before accessing them
+      if (this.hasHiddenListTarget) {
+        this.hiddenListTarget.innerHTML = this.renderColumnList(hiddenCols, 'hidden')
+      }
+      if (this.hasShownListTarget) {
+        this.shownListTarget.innerHTML = this.renderColumnList(shownCols, 'shown')
+      }
+      if (this.hasFeaturedListTarget) {
+        this.featuredListTarget.innerHTML = this.renderColumnList(featuredCols, 'featured')
+      }
 
-    document.getElementById('hidden-count').textContent = hiddenCols.length
-    document.getElementById('shown-count').textContent = shownCols.length
-    document.getElementById('featured-count').textContent = featuredCols.length
+      const hiddenCount = document.getElementById('hidden-count')
+      const shownCount = document.getElementById('shown-count')
+      const featuredCount = document.getElementById('featured-count')
+
+      if (hiddenCount) hiddenCount.textContent = hiddenCols.length
+      if (shownCount) shownCount.textContent = shownCols.length
+      if (featuredCount) featuredCount.textContent = featuredCols.length
+    } catch (e) {
+      console.error('❌ Error in renderModal:', e)
+    }
   }
 
   /**
